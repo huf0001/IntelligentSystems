@@ -105,3 +105,7 @@ fabric.properties
 hs_err_pid*
 
 # End of https://www.gitignore.io/api/java,intellij
+DeliveryRouting/.idea/workspace.xml
+DeliveryRouting/.idea/misc.xml
+DeliveryRouting/MTPs-Main-Container.txt
+DeliveryRouting/APDescription.txt
