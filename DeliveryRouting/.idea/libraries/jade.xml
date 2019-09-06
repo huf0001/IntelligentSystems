@@ -3,8 +3,10 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/lib/jade.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/jadeExamples.jar!/" />
+      <root url="file://$PROJECT_DIR$/lib" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
+    <jarDirectory url="file://$PROJECT_DIR$/lib" recursive="false" />
   </library>
 </component>
