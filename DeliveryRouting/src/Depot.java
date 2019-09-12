@@ -27,7 +27,7 @@ public class Depot extends Agent{
         };
     }
 
-    public void GetConstraint(AID truck) {
+    public void GetConstraints() {
         Behaviour getConstraint = new Behaviour(this) {
             private int truckAmount = 0;
             private int truckResponsesReceived = 0;
@@ -86,7 +86,8 @@ public class Depot extends Agent{
                 return step == 2;
             }
         };
-        throw new UnsupportedOperationException("Not implemented");
+
+        addBehaviour(getConstraint);
     }
 
     public List<Parcel> GetParcels(){
