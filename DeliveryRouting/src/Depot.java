@@ -14,17 +14,33 @@ public class Depot extends Agent{
     private List<Parcel> parcels;
     private List<AID> trucksAtDepot;
     private Map<AID, Float> truckCapacity = new HashMap<AID, Float>();
-    private List<List<Road>> routes;
+    private Map<AID, List<Road>> routes = new HashMap<AID, List<Road>>();
     private List<Node> unroutedNodes;
     private List<Node> routedNodes;
 
 
     protected void setup(){
-        CyclicBehaviour listeningBehaviour = new CyclicBehaviour(this) {
+        CyclicBehaviour listenForRouteQueries = new CyclicBehaviour(this) {
             public void action() {
+                // Match a request for a route
+                MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+                        MessageTemplate.MatchConversationId("Route_Request"));
+                ACLMessage request = receive(mt);
 
+                if (request != null) {
+                    ACLMessage reply = request.createReply();
+                    reply.setPerformative(ACLMessage.INFORM);
+
+                    // Send the route according to the AID of the truck
+                    reply.setContent(routes.get(request.getSender()).toString());
+
+                    send(reply);
+                } else {
+                    block();
+                }
             }
         };
+        addBehaviour(listenForRouteQueries);
     }
 
     public void GetConstraints() {
