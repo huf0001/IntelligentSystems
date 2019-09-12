@@ -27,7 +27,7 @@ public class Depot extends Agent{
                 ACLMessage request = receive(mt);
                 if (request != null) {
                     ACLMessage reply = request.createReply();
-                    reply.getPerformative(ACLMessage.INFORM);
+                    reply.setPerformative(ACLMessage.INFORM);
                     reply.setContent(routes.get(request.getSender()).toString());
                     send(reply);
                 } else {
