@@ -1,13 +1,16 @@
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.tools.sniffer.Message;
 
 import java.util.List;
 
 public class Truck extends Agent
 {
+    private AID truckDepot;
     private float weightLimit;
     private List<Parcel> parcels;
     private Node currentNode;
@@ -15,7 +18,39 @@ public class Truck extends Agent
 
     protected void setup()
     {
-        addBehaviour(new ListeningBehaviour());
+        CyclicBehaviour listeningBehaviour = new CyclicBehaviour(this)
+        {
+            public void action()
+            {
+                //Create message template
+                MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+                        MessageTemplate.MatchConversationId("Constraint_Request"));
+
+                //Look for message
+                ACLMessage msg = receive(mt);
+
+                //If found a message
+                if (msg != null)
+                {
+                    /*//Get fields that tell me what the message is for
+                    int performative = msg.getPerformative();
+                    String conversationId = msg.getConversationId();
+                    String content = msg.getContent();
+
+                    //If it's a constraint request asking for the weight limit
+                    if (performative == ACLMessage.REQUEST && conversationId == "Constraint_Request" && content == "Capacity")
+                    {*/
+                        //Reply with weight limit
+                        GiveConstraints(msg);
+                    //}
+
+                    //Reset after handling message
+                    msg = null;
+                }
+            }
+        };
+
+        addBehaviour(listeningBehaviour);
     }
 
     private void DropOffParcel ()
@@ -30,7 +65,58 @@ public class Truck extends Agent
 
     private void GetRoute ()
     {
-        throw new UnsupportedOperationException("Not implemented");
+        Behaviour getRoute = new Behaviour(this)
+        {
+            private int step;
+            private MessageTemplate mt;
+
+            public void action()
+            {
+                switch (step) {
+                    case 0:
+                        ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+
+                        // Setup request values
+                        request.addReceiver(truckDepot);
+                        request.setContent("Route");
+                        request.setConversationId("Route_Request");
+                        request.setReplyWith("request" + System.currentTimeMillis()); // Unique ID
+
+                        // Send request
+                        send(request);
+
+                        // Setup template to receive responses
+                        mt = MessageTemplate.and(MessageTemplate.MatchConversationId("Route_Request"),
+                                MessageTemplate.MatchInReplyTo(request.getReplyWith()));
+
+                        step++;
+                        break;
+                    case 1:
+                        // Wait for replies and store their content
+                        ACLMessage reply = receive(mt);
+
+                        if (reply != null)
+                        {
+                            String response = reply.getContent();
+                            //HOW DO: convert string to List<Road>?
+                            step++;
+                        }
+                        else
+                        {
+                            block();
+                        }
+
+                        break;
+                }
+            }
+
+            public boolean done()
+            {
+                return step == 2;
+            }
+        };
+
+        addBehaviour(getRoute);
     }
 
     private void GiveConstraints (ACLMessage request)
@@ -49,32 +135,5 @@ public class Truck extends Agent
 
         //Send reply
         send(reply);
-    }
-
-    private class ListeningBehaviour extends CyclicBehaviour
-    {
-        public void action()
-        {
-            //Look for message
-            ACLMessage msg = receive();
-
-            //If found a message
-            if (msg != null)
-            {
-                //Get fields that tell me what the message is for
-                String conversationId = msg.getConversationId();
-                String content = msg.getContent();
-
-                //If it's a constraint request asking for the weight limit
-                if (conversationId == "Constraint_Request" && content == "Capacity")
-                {
-                    //Reply with weight limit
-                    GiveConstraints(msg);
-                }
-
-                //Reset after handling message
-                msg = null;
-            }
-        }
     }
 }

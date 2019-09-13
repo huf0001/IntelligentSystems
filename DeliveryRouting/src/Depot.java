@@ -30,6 +30,7 @@ public class Depot extends Agent{
                 if (request != null) {
                     ACLMessage reply = request.createReply();
                     reply.setPerformative(ACLMessage.INFORM);
+                    reply.setConversationId(request.getConversationId());
 
                     // Send the route according to the AID of the truck
                     reply.setContent(routes.get(request.getSender()).toString());
