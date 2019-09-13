@@ -4,7 +4,9 @@ import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.util.leap.Serializable;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +35,16 @@ public class Depot extends Agent{
                     reply.setConversationId(request.getConversationId());
 
                     // Send the route according to the AID of the truck
-                    reply.setContent(routes.get(request.getSender()).toString());
+//                    reply.setContent(routes.get(request.getSender()).toString());
+
+                    try
+                    {
+                        reply.setContentObject((Serializable) routes.get(request.getSender()));
+                    }
+                    catch (IOException e)
+                    {
+                        e.printStackTrace();
+                    }
 
                     send(reply);
                 } else {

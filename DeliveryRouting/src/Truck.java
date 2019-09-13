@@ -4,6 +4,7 @@ import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
 import jade.tools.sniffer.Message;
 
 import java.util.List;
@@ -97,8 +98,17 @@ public class Truck extends Agent
 
                         if (reply != null)
                         {
-                            String response = reply.getContent();
-                            //HOW DO: convert string to List<Road>?
+//                            String response = reply.getContent();
+
+                            try
+                            {
+                                route = (List<Road>) reply.getContentObject();
+                            }
+                            catch (UnreadableException e)
+                            {
+                                e.printStackTrace();
+                            }
+
                             step++;
                         }
                         else
