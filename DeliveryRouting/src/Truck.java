@@ -17,6 +17,11 @@ public class Truck extends Agent
     private Node currentNode;
     private List<Road> route;
 
+    public Truck(float weightLimit)
+    {
+        this.weightLimit = weightLimit;
+    }
+
     protected void setup()
     {
         CyclicBehaviour listeningBehaviour = new CyclicBehaviour(this)

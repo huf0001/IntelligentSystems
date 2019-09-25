@@ -20,8 +20,14 @@ public class Depot extends Agent{
     private List<Node> unroutedNodes;
     private List<Node> routedNodes;
 
+    public Depot(List<AID> trucksAtDepot)
+    {
+        this.trucksAtDepot = trucksAtDepot;
+    }
 
-    protected void setup(){
+    protected void setup(List<AID> trucks){
+        trucksAtDepot = trucks;
+
         CyclicBehaviour listenForRouteQueries = new CyclicBehaviour(this) {
             public void action() {
                 // Match a request for a route
