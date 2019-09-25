@@ -50,8 +50,6 @@ public class Depot extends Agent{
                     reply.setConversationId(request.getConversationId());
 
                     // Send the route according to the AID of the truck
-//                    reply.setContent(routes.get(request.getSender()).toString());
-
                     try
                     {
                         reply.setContentObject((Serializable) routes.get(request.getSender()));
