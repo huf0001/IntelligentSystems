@@ -6,6 +6,15 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.util.leap.Serializable;
 
+import org.chocosolver.solver.Model;
+import org.chocosolver.solver.Solver;
+import org.chocosolver.solver.constraints.Constraint;
+import org.chocosolver.solver.search.loop.monitors.IMonitorSolution;
+import org.chocosolver.solver.search.strategy.Search;
+import org.chocosolver.solver.search.strategy.assignments.DecisionOperatorFactory;
+import org.chocosolver.solver.variables.IntVar;
+import org.chocosolver.util.tools.ArrayUtils;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -20,8 +29,14 @@ public class Depot extends Agent{
     private List<Node> unroutedNodes;
     private List<Node> routedNodes;
 
+    public Depot(List<AID> trucksAtDepot)
+    {
+        this.trucksAtDepot = trucksAtDepot;
+    }
 
-    protected void setup(){
+    protected void setup(List<AID> trucks){
+        trucksAtDepot = trucks;
+
         CyclicBehaviour listenForRouteQueries = new CyclicBehaviour(this) {
             public void action() {
                 // Match a request for a route
