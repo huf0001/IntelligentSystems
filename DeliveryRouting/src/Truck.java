@@ -28,35 +28,74 @@ public class Truck extends Agent
         {
             public void action()
             {
-                //Create message template
-                MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
-                        MessageTemplate.MatchConversationId("Constraint_Request"));
-
-                //Look for message
-                ACLMessage msg = receive(mt);
-
-                //If found a message
-                if (msg != null)
-                {
-                    /*//Get fields that tell me what the message is for
-                    int performative = msg.getPerformative();
-                    String conversationId = msg.getConversationId();
-                    String content = msg.getContent();
-
-                    //If it's a constraint request asking for the weight limit
-                    if (performative == ACLMessage.REQUEST && conversationId == "Constraint_Request" && content == "Capacity")
-                    {*/
-                        //Reply with weight limit
-                        GiveConstraints(msg);
-                    //}
-
-                    //Reset after handling message
-                    msg = null;
-                }
+                CheckForConstraintRequest();
+                CheckForParcelAllocation();
             }
         };
 
         addBehaviour(listeningBehaviour);
+    }
+
+    private void CheckForConstraintRequest()
+    {
+        //Declare template and message variables
+        MessageTemplate mt;
+        ACLMessage msg = null;
+
+        mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+                MessageTemplate.MatchConversationId("Constraint_Request"));
+        msg = receive(mt);
+
+        if (msg != null)
+        {
+            //Reply with weight limit, then reset msg
+            GiveConstraints(msg);
+            msg = null;
+        }
+    }
+
+    private void GiveConstraints (ACLMessage request)
+    {
+        //Create reply
+        ACLMessage reply = request.createReply();
+
+        //Set reply "metadata"
+        reply.setPerformative(ACLMessage.INFORM);
+        reply.setInReplyTo(request.getInReplyTo());
+        reply.setConversationId(request.getConversationId());
+
+        //Set reply content
+        String capacity = "%d", weightLimit;
+        reply.setContent(capacity);
+
+        //Send reply
+        send(reply);
+    }
+
+    private void CheckForParcelAllocation()
+    {
+        //Declare template and message variables
+        MessageTemplate mt;
+        ACLMessage msg = null;
+
+        //Check for Parcel_Allocation
+        mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                MessageTemplate.MatchConversationId("Parcel_Allocation"));
+        msg = receive (mt);
+
+        if (msg != null)
+        {
+            try
+            {
+                parcels = (List<Parcel>) msg.getContentObject();
+            }
+            catch (UnreadableException e)
+            {
+                e.printStackTrace();
+            }
+
+            msg = null;
+        }
     }
 
     private void DropOffParcel ()
@@ -132,23 +171,5 @@ public class Truck extends Agent
         };
 
         addBehaviour(getRoute);
-    }
-
-    private void GiveConstraints (ACLMessage request)
-    {
-        //Create reply
-        ACLMessage reply = request.createReply();
-
-        //Set reply "metadata"
-        reply.setPerformative(ACLMessage.INFORM);
-        reply.setInReplyTo(request.getInReplyTo());
-        reply.setConversationId(request.getConversationId());
-
-        //Set reply content
-        String capacity = "%d", weightLimit;
-        reply.setContent(capacity);
-
-        //Send reply
-        send(reply);
     }
 }
