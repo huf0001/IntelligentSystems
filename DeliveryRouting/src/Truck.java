@@ -5,22 +5,32 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
-import jade.tools.sniffer.Message;
 
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Truck extends Agent
 {
+    //Private Fields --------------------------------------------------------------------------------------------------------------------------------
+
     private AID truckDepot;
     private float weightLimit;
     private List<Parcel> parcels;
     private Node currentNode;
     private List<Road> route;
 
+    //Public Properties------------------------------------------------------------------------------------------------------------------------------
+
+    //Constructor------------------------------------------------------------------------------------------------------------------------------------
+
     public Truck(float weightLimit)
     {
         this.weightLimit = weightLimit;
     }
+
+    //Methods----------------------------------------------------------------------------------------------------------------------------------------
 
     protected void setup()
     {
@@ -98,16 +108,6 @@ public class Truck extends Agent
         }
     }
 
-    private void DropOffParcel ()
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    private void GoToNextNode ()
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
     private void GetRoute ()
     {
         Behaviour getRoute = new Behaviour(this)
@@ -171,5 +171,47 @@ public class Truck extends Agent
         };
 
         addBehaviour(getRoute);
+    }
+
+    private void GoToNextNode ()
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    private void DropOffParcel ()
+    {
+        List<Parcel> delivery = new ArrayList<Parcel>();
+
+        for (Parcel p : parcels)
+        {
+            if (p.getDestination() == currentNode)
+            {
+                delivery.add(p);
+            }
+        }
+
+        parcels.removeAll(delivery);
+        currentNode.DeliverParcels(delivery);
+
+//        ACLMessage message = new ACLMessage(ACLMessage.INFORM);
+//
+//        // Setup request values
+//        message.addReceiver(currentNode);
+//
+//        // Send the route according to the AID of the truck
+//        try
+//        {
+//            message.setContentObject((Serializable)droppingOff);
+//        }
+//        catch (IOException e)
+//        {
+//            e.printStackTrace();
+//        }
+//
+//        message.setConversationId("Parcel_Delivery");
+//        message.setReplyWith("request" + System.currentTimeMillis()); // Unique ID
+//
+//        // Send request
+//        send(message);
     }
 }
