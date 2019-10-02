@@ -7,6 +7,7 @@ import jade.lang.acl.MessageTemplate;
 import jade.util.leap.Serializable;
 
 import org.chocosolver.solver.Model;
+import org.chocosolver.solver.Solution;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.search.loop.monitors.IMonitorSolution;
@@ -32,6 +33,33 @@ public class Depot extends Agent{
     public Depot(List<AID> trucksAtDepot)
     {
         this.trucksAtDepot = trucksAtDepot;
+    }
+
+    private void AssignParcels(){
+        int numTrucks = trucksAtDepot.size();
+        int numParcels = parcels.size();
+
+        int[][] weights = {
+                {1, 10},
+                {1, 10},
+                {1}
+        }
+
+        Model m = new Model("Parcel Assignment for Truck_" + j);
+        IntVar[] vars = new IntVar[parcels.size()];
+        for (int i = 0; i < parcels.size(); i++)
+        {
+            vars[i] = m.intVar("Parcel_" + i, 0, parcels.get(i).weight);
+        }
+
+        for (int i = 0; i < vars.length; i++)
+        {
+            m.arithm(vars[i], "<", 1);
+            m.arithm(vars[i], ">", parcels.get(i).weight - 1);
+        }
+
+        m.sum(vars, "<=", 10).post();
+        m.sum(vars, ">", 0).post();
     }
 
     protected void setup(List<AID> trucks){
