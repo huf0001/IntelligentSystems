@@ -12,10 +12,8 @@ public class Node {
         }
     }
 
-    Node(int value, int weight)
+    Node(int value)
     {
         this.id = value;
-        this.weight = weight;
     }
-
 };
