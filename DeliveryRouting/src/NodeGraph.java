@@ -78,21 +78,6 @@ public class NodeGraph {
         }
     }
 
-    void createWorldPoints(){
-        for (Node n: adjNodes.keySet()){
-            Vector2 temp = new Vector2(rand.nextInt(800), rand.nextInt(800));
-            n.position = temp;
-        }
-//        for (Node n: adjNodes.keySet()){
-//            for(int i = 0; i < 1000; i++){
-//                Vector2 temp = new Vector2(rand.nextInt(800), rand.nextInt(800));
-//
-//                if(!checkPoint(temp, 100)){
-//                    n.position = temp;
-//                }
-//            }
-//        }
-    }
 
     boolean checkPoint(Vector2 w, int radius){
         boolean result = true;

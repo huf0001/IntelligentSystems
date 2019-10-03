@@ -18,13 +18,13 @@ public class World extends JFrame {
             Node node = entry.getKey();
             List<Node> nodeList = entry.getValue();
 
-//            g.fillOval(node.position.x - 5, node.position.y- 5, 10, 10);
+            g.fillOval((int)node.position.x - 5, (int)node.position.y- 5, 10, 10);
 //            g.fillOval((int)node.position.x - 5, (int)node.position.y - 5, 10, 10);
-            g.drawString(Integer.toString(node.id), (int)node.position.x , (int)node.position.y);
+//            g.drawString(Integer.toString(node.id), (int)node.position.x , (int)node.position.y);
 //            g.drawOval((int)node.position.x - 15, (int)node.position.y - 15, 30, 30);
 
 
-            graph.addEdgesInRange(node, 100);
+            graph.addEdgesInRange(node, 50);
 
             for(Node n: nodeList){
                 g.drawLine((int)n.position.x, (int)n.position.y, (int)node.position.x, (int)node.position.y);
@@ -37,7 +37,7 @@ public class World extends JFrame {
 
     public World() {
         setTitle("Delivery Routing");
-        setSize(800, 800);
+        setSize(1000, 1000);
         setLocationRelativeTo(null);
         setVisible(true);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -48,7 +48,7 @@ public class World extends JFrame {
     static NodeGraph createGraph(){
         NodeGraph graph = new NodeGraph();
         int count = 0;
-        List<Vector2> points = PoissonDiscSampling.GeneratePoints(50, new Vector2(800, 800), 1);
+        List<Vector2> points = PoissonDiscSampling.GeneratePoints(25, new Vector2(1000, 1000), 3);
         for(Vector2 v : points){
             graph.addNode(count, v);
 
