@@ -14,9 +14,13 @@ public class NodeGraph {
     }
 
     void addNode(int id){
-        Node n = new Node(id);
-        adjNodes.putIfAbsent(n, new ArrayList<>());
+        adjNodes.putIfAbsent(new Node(id), new ArrayList<>());
     }
+
+    void addNode(int id, Vector2 v){
+        adjNodes.putIfAbsent(new Node(id, v), new ArrayList<>());
+    }
+
     void removeNode(int id){
         Node n = getNodeWithID(id);
         adjNodes.values().stream().forEach(e -> e.remove(n));
@@ -35,7 +39,7 @@ public class NodeGraph {
         adjNodes.get(n1).add(n2);
         adjNodes.get(n2).add(n1);
     }
-    void removeEdge(int src, int dest){
+    void removeEdge(int src, int dest) {
         Node n1 = getNodeWithID(src);
         Node n2 = getNodeWithID(dest);
         List<Node> eN1 = adjNodes.get(src);
@@ -45,25 +49,6 @@ public class NodeGraph {
         if (eN2 != null)
             eN2.remove(n1);
     }
-    private List<Node> getAdjNodes(int id){
-        return adjNodes.get(getNodeWithID(id));
-    }
-
-    void printNodes(int id){
-        System.out.print(id + "-->");
-        for (Node n : getAdjNodes(id)){
-            System.out.print(n.id + " ");
-        }
-    }
-    List<Node.WorldPoint> GetPoints(){
-        List<Node.WorldPoint> points = new ArrayList<>();
-        for (Node n : adjNodes.keySet()){
-            points.add(n.position);
-        }
-        return points;
-    }
-
-
 
     private Node getNodeWithID(int id){
         for (Node n : adjNodes.keySet()){
@@ -84,11 +69,10 @@ public class NodeGraph {
     }
 
     void addEdgesInRange(Node node, int radius){
-        int x_dist, y_dist;
+        double dist;
         for (Node n : adjNodes.keySet()){
-            x_dist = Math.abs(node.position.x - n.position.x);
-            y_dist = Math.abs(node.position.y - n.position.y);
-            if ((x_dist < radius) && (y_dist < radius)){
+            dist = Vector2.distance(node.position, n.position);
+            if ((dist < radius)){
                 addEdge(n, node);
             }
         }
@@ -96,24 +80,24 @@ public class NodeGraph {
 
     void createWorldPoints(){
         for (Node n: adjNodes.keySet()){
-            Node.WorldPoint temp = new Node.WorldPoint(rand.nextInt(600) + 100, rand.nextInt(600) + 100);
+            Vector2 temp = new Vector2(rand.nextInt(800), rand.nextInt(800));
             n.position = temp;
         }
-        for (Node n: adjNodes.keySet()){
-            for(int i = 0; i < 1000; i++){
-                Node.WorldPoint temp = new Node.WorldPoint(rand.nextInt(800), rand.nextInt(800));
-
-                if(!checkPoint(temp, 100)){
-                    n.position = temp;
-                }
-            }
-        }
+//        for (Node n: adjNodes.keySet()){
+//            for(int i = 0; i < 1000; i++){
+//                Vector2 temp = new Vector2(rand.nextInt(800), rand.nextInt(800));
+//
+//                if(!checkPoint(temp, 100)){
+//                    n.position = temp;
+//                }
+//            }
+//        }
     }
 
-    boolean checkPoint(Node.WorldPoint w, int radius){
+    boolean checkPoint(Vector2 w, int radius){
         boolean result = true;
         for(Node n: adjNodes.keySet()){
-            if (Math.abs(n.position.x - w.x) < radius && Math.abs(n.position.y - w.y) < radius){
+            if (Vector2.distance(n.position, w) < radius){
                 result = false;
             }
         }

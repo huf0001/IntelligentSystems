@@ -9,24 +9,25 @@ import java.util.Map;
 
 public class World extends JFrame {
 
+    NodeGraph graph = createGraph();
+
 
     public void paint(Graphics g){
-        NodeGraph graph = createGraph();
-        graph.createWorldPoints();
-
-
 
         for(Map.Entry<Node, List<Node>> entry : graph.adjNodes.entrySet()){
             Node node = entry.getKey();
             List<Node> nodeList = entry.getValue();
 
-            g.fillOval(node.position.x - 5, node.position.y- 5, 10, 10);
+//            g.fillOval(node.position.x - 5, node.position.y- 5, 10, 10);
+//            g.fillOval((int)node.position.x - 5, (int)node.position.y - 5, 10, 10);
+            g.drawString(Integer.toString(node.id), (int)node.position.x , (int)node.position.y);
+//            g.drawOval((int)node.position.x - 15, (int)node.position.y - 15, 30, 30);
 
 
-            graph.addEdgesInRange(node, 60);
+            graph.addEdgesInRange(node, 100);
 
             for(Node n: nodeList){
-                g.drawLine(n.position.x, n.position.y, node.position.x, node.position.y);
+                g.drawLine((int)n.position.x, (int)n.position.y, (int)node.position.x, (int)node.position.y);
             }
         }
     }
@@ -46,9 +47,15 @@ public class World extends JFrame {
 
     static NodeGraph createGraph(){
         NodeGraph graph = new NodeGraph();
-        for(int i = 0;  i < 50; i++){
-            graph.addNode(i);
+        int count = 0;
+        List<Vector2> points = PoissonDiscSampling.GeneratePoints(50, new Vector2(800, 800), 1);
+        for(Vector2 v : points){
+            graph.addNode(count, v);
+
+            count++;
         }
+//        graph.addNode(1);
+//        graph.createWorldPoints();
         return graph;
     }
 
@@ -57,6 +64,7 @@ public class World extends JFrame {
 
     public static void main(String[] args) {
         World w = new World();
+
 
     }
 }
