@@ -18,7 +18,7 @@ public class World extends JFrame {
             Node node = entry.getKey();
             List<Node> nodeList = entry.getValue();
 
-            graph.addEdgesInRange(node, 50);
+            graph.addEdgesInRange(node, 95);
 
 
             for(Node n: nodeList){
@@ -63,7 +63,7 @@ public class World extends JFrame {
     static NodeGraph createGraph(){
         NodeGraph graph = new NodeGraph();
         int count = 0;
-        List<Vector2> points = PoissonDiscSampling.GeneratePoints(25, new Vector2(1000, 1000), 3);
+        List<Vector2> points = PoissonDiscSampling.GeneratePoints(50, new Vector2(1000, 1000), 3);
         for(Vector2 v : points){
             graph.addNode(count, v);
 
