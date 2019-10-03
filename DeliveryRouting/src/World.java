@@ -1,5 +1,5 @@
 import javax.swing.JFrame;
-import java.awt.Graphics;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,17 +18,32 @@ public class World extends JFrame {
             Node node = entry.getKey();
             List<Node> nodeList = entry.getValue();
 
-            g.fillOval((int)node.position.x - 5, (int)node.position.y- 5, 10, 10);
+            graph.addEdgesInRange(node, 50);
+
+
+            for(Node n: nodeList){
+                g.drawLine((int)n.position.x, (int)n.position.y, (int)node.position.x, (int)node.position.y);
+            }
+
+            if(node.id == 0){
+                g.setColor(Color.RED);
+                g.fillOval((int)node.position.x - 5, (int)node.position.y- 5, 10, 10);
+                g.setColor(Color.BLACK);
+
+            }
+            else{
+                g.setColor(Color.BLUE);
+                g.fillOval((int)node.position.x - 5, (int)node.position.y- 5, 10, 10);
+                g.setColor(Color.BLACK);
+            }
+
 //            g.fillOval((int)node.position.x - 5, (int)node.position.y - 5, 10, 10);
 //            g.drawString(Integer.toString(node.id), (int)node.position.x , (int)node.position.y);
 //            g.drawOval((int)node.position.x - 15, (int)node.position.y - 15, 30, 30);
 
 
-            graph.addEdgesInRange(node, 50);
 
-            for(Node n: nodeList){
-                g.drawLine((int)n.position.x, (int)n.position.y, (int)node.position.x, (int)node.position.y);
-            }
+
         }
     }
 

@@ -32,8 +32,8 @@ public static List<Vector2> GeneratePoints(float radius, Vector2 sampleRegionSiz
 
                     points.add(candidate);
                     spawnPoints.add(candidate);
-                    System.out.println("Points: " + points.size()+ " sPoints: " + spawnPoints.size());
-                    System.out.println("cx: " + (int)candidate.x/cellSize + " cy: " + (int)candidate.y/cellSize);
+//                    System.out.println("Points: " + points.size()+ " sPoints: " + spawnPoints.size());
+//                    System.out.println("cx: " + (int)candidate.x/cellSize + " cy: " + (int)candidate.y/cellSize);
                     grid[(int)(candidate.x/cellSize)][(int)(candidate.y/cellSize)] = points.size();
                     candidateAccepted = true;
                     break;
@@ -47,7 +47,7 @@ public static List<Vector2> GeneratePoints(float radius, Vector2 sampleRegionSiz
     }
 
     static boolean IsValid(Vector2 candidate, Vector2 sampleRegionSize, double cellSize, float radius, List<Vector2> points, int[][] grid){
-        if(candidate.x >= 10 && candidate.x <= sampleRegionSize.x - 10 && candidate.y >= 10 && candidate.y <= sampleRegionSize.y - 10){
+        if(candidate.x >= 50 && candidate.x <= sampleRegionSize.x - 50 && candidate.y >= 50 && candidate.y <= sampleRegionSize.y - 50){
             int cellX = (int)(candidate.x/cellSize);
             int cellY = (int)(candidate.y/cellSize);
             int searchStartX = Math.max(0, cellX - 2);
