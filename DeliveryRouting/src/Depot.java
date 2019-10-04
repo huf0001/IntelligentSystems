@@ -13,6 +13,7 @@ import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.search.loop.monitors.IMonitorSolution;
 import org.chocosolver.solver.search.strategy.Search;
 import org.chocosolver.solver.search.strategy.assignments.DecisionOperatorFactory;
+import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.tools.ArrayUtils;
 
@@ -37,30 +38,28 @@ public class Depot extends Agent
     }
 
     private void AssignParcels(){
-        int numTrucks = trucksAtDepot.size();
-        int numParcels = parcels.size();
+        Model m = new Model("Parcel Assignment for Trucks");
+        BoolVar[][] assignment = m.boolVarMatrix(parcels.size(), trucksAtDepot.size());
 
-        int[][] weights = {
-                {1, 10},
-                {1, 10},
-                {1}
-        }
-
-        Model m = new Model("Parcel Assignment for Truck_" + j);
-        IntVar[] vars = new IntVar[parcels.size()];
-        for (int i = 0; i < parcels.size(); i++)
+        // Check num of trucks assigned to parcel = 1
+        for (int i = 0; i < assignment[0].length; i++)
         {
-            vars[i] = m.intVar("Parcel_" + i, 0, parcels.get(i).weight);
+            m.sum(assignment[i], "=", 1);
         }
 
-        for (int i = 0; i < vars.length; i++)
+        // Check total weight of parcels <= truck weight limit
+        for (int i = 0; i < assignment[0].length; i++)
         {
-            m.arithm(vars[i], "<", 1);
-            m.arithm(vars[i], ">", parcels.get(i).weight - 1);
+            m.sum(getColumn(assignment, i), "<=", 10);
         }
+    }
 
-        m.sum(vars, "<=", 10).post();
-        m.sum(vars, ">", 0).post();
+    private BoolVar[] getColumn(BoolVar[][] array, int index){
+        BoolVar[] column = new BoolVar[array[0].length]; // Here I assume a rectangular 2D array!
+        for(int i = 0; i < column.length; i++){
+            column[i] = array[i][index];
+        }
+        return column;
     }
 
     protected void setup(List<AID> trucks){
