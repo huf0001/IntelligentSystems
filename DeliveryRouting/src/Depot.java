@@ -1,3 +1,4 @@
+import com.google.gson.Gson;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -15,17 +16,21 @@ import org.chocosolver.solver.search.strategy.assignments.DecisionOperatorFactor
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.tools.ArrayUtils;
 
+import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class Depot extends Agent{
     private World world;
-    private List<Parcel> parcels;
+    private Parcel[] parcels = new Parcel[30];
     private List<AID> trucksAtDepot;
     private Map<AID, Float> truckCapacity = new HashMap<AID, Float>();
     private Map<AID, List<Road>> routes = new HashMap<AID, List<Road>>();
+    private Map<AID, List<Parcel>> truckParcels = new HashMap<AID, List<Parcel>>();
     private List<Node> unroutedNodes;
     private List<Node> routedNodes;
 
@@ -131,12 +136,83 @@ public class Depot extends Agent{
         addBehaviour(getConstraint);
     }
 
-    public List<Parcel> GetParcels(){
-        throw new UnsupportedOperationException("Not implemented");
+    public void GetParcels(){
+        try {
+            String data = new String(Files.readAllBytes(Paths.get("Parcels.json")));
+            Gson gson = new Gson();
+            parcels = gson.fromJson(data, Parcel[].class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void CreateRoutes() {
         throw new UnsupportedOperationException("Not implemented");
+    }
+
+    public void GiveParcels() {
+        Behaviour giveParcels = new Behaviour(this) {
+            private int truckAmount = 0;
+            private int truckResponsesReceived = 0;
+            private int step = 0;
+            private Map<AID, Boolean> responses = new HashMap<AID, Boolean>();
+            private MessageTemplate mt;
+
+            public void action() {
+                switch (step) {
+                    case 0:
+                        // Give to all trucks at depot
+                        for (AID truck : trucksAtDepot) {
+                            ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+
+                            // Setup inform values
+                            inform.setContentObject((java.io.Serializable) truckParcels.get(truck));
+                            inform.setConversationId("Parcels");
+                            inform.setReplyWith("inform" + System.currentTimeMillis()); // Unique ID
+
+                            inform.addReceiver(truck);
+                            truckAmount++;
+
+                            // Send inform
+                            send(inform);
+                        }
+
+                        // Setup template to receive responses
+                        mt = MessageTemplate.MatchConversationId("Parcels");
+
+                        step = 1;
+                        break;
+                    case 1:
+
+                        ACLMessage reply = receive(mt);
+                        // Wait for replies and store their content
+                        if (reply != null) {
+                            if (reply.getPerformative() == ACLMessage.INFORM) {
+                                String answer = reply.getContent();
+                                if (answer.equals("Yes")){
+                                    responses.put(reply.getSender(), true);
+                                } else{
+                                    responses.put(reply.getSender(), false);
+                                }
+                            }
+                            truckResponsesReceived++;
+                        } else {
+                            block();
+                        }
+
+                        if (truckResponsesReceived >= truckAmount) {
+                            step = 2;
+                        }
+                        break;
+                }
+            }
+
+            public boolean done() {
+                return step == 2;
+            }
+        };
+
+        addBehaviour(giveParcels);
     }
 
     public void GiveRoute(AID truck){
