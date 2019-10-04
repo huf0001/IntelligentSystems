@@ -21,7 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Depot extends Agent{
+public class Depot extends Agent
+{
     private World world;
     private List<Parcel> parcels;
     private List<AID> trucksAtDepot;

@@ -5,22 +5,32 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
-import jade.tools.sniffer.Message;
 
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Truck extends Agent
 {
+    //Private Fields --------------------------------------------------------------------------------------------------------------------------------
+
     private AID truckDepot;
     private float weightLimit;
     private List<Parcel> parcels;
     private Node currentNode;
     private List<Road> route;
 
+    //Public Properties------------------------------------------------------------------------------------------------------------------------------
+
+    //Constructor------------------------------------------------------------------------------------------------------------------------------------
+
     public Truck(float weightLimit)
     {
         this.weightLimit = weightLimit;
     }
+
+    //Methods----------------------------------------------------------------------------------------------------------------------------------------
 
     protected void setup()
     {
@@ -77,6 +87,7 @@ public class Truck extends Agent
         //Declare template and message variables
         MessageTemplate mt;
         ACLMessage msg = null;
+        boolean received = false;
 
         //Check for Parcel_Allocation
         mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
@@ -88,24 +99,30 @@ public class Truck extends Agent
             try
             {
                 parcels = (List<Parcel>) msg.getContentObject();
+                received = true;
             }
             catch (UnreadableException e)
             {
                 e.printStackTrace();
             }
 
+            //Create reply
+            ACLMessage reply = msg.createReply();
+
+            //Set reply "metadata"
+            reply.setPerformative(ACLMessage.INFORM);
+            reply.setInReplyTo(msg.getInReplyTo());
+            reply.setConversationId(msg.getConversationId());
+
+            //Set reply content
+            String outcome = received ? "Yes" : "No";
+            reply.setContent(outcome);
+
+            //Send reply
+            send(reply);
+
             msg = null;
         }
-    }
-
-    private void DropOffParcel ()
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    private void GoToNextNode ()
-    {
-        throw new UnsupportedOperationException("Not implemented");
     }
 
     private void GetRoute ()
@@ -139,19 +156,34 @@ public class Truck extends Agent
                     case 1:
                         // Wait for replies and store their content
                         ACLMessage reply = receive(mt);
+                        boolean received = false;
 
                         if (reply != null)
                         {
-//                            String response = reply.getContent();
-
                             try
                             {
                                 route = (List<Road>) reply.getContentObject();
+                                received = true;
                             }
                             catch (UnreadableException e)
                             {
                                 e.printStackTrace();
                             }
+
+                            //Create confirmation message
+                            ACLMessage confirmation = reply.createReply();
+
+                            //Set confirmation "metadata"
+                            confirmation.setPerformative(ACLMessage.INFORM);
+                            confirmation.setInReplyTo(reply.getInReplyTo());
+                            confirmation.setConversationId(reply.getConversationId());
+
+                            //Set confirmation content
+                            String outcome = received ? "Yes" : "No";
+                            confirmation.setContent(outcome);
+
+                            //Send confirmation
+                            send(confirmation);
 
                             step++;
                         }
@@ -171,5 +203,47 @@ public class Truck extends Agent
         };
 
         addBehaviour(getRoute);
+    }
+
+    private void GoToNextNode ()
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    private void DropOffParcel ()
+    {
+        List<Parcel> delivery = new ArrayList<Parcel>();
+
+        for (Parcel p : parcels)
+        {
+            if (p.getDestination() == currentNode)
+            {
+                delivery.add(p);
+            }
+        }
+
+        parcels.removeAll(delivery);
+        currentNode.DeliverParcels(delivery);
+
+//        ACLMessage message = new ACLMessage(ACLMessage.INFORM);
+//
+//        // Setup request values
+//        message.addReceiver(currentNode);
+//
+//        // Send the route according to the AID of the truck
+//        try
+//        {
+//            message.setContentObject((Serializable)droppingOff);
+//        }
+//        catch (IOException e)
+//        {
+//            e.printStackTrace();
+//        }
+//
+//        message.setConversationId("Parcel_Delivery");
+//        message.setReplyWith("request" + System.currentTimeMillis()); // Unique ID
+//
+//        // Send request
+//        send(message);
     }
 }
