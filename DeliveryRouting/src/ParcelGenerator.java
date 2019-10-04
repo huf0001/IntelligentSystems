@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Random;
 
 public class ParcelGenerator {
-    private static final int NUM = 30;
+    public static final int NUM = 30;
     private Parcel[] parcels = new Parcel[NUM];
 
     public static void main(String[] args) {
