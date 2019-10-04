@@ -3,20 +3,28 @@ import java.util.List;
 
 public class Node
 {
+    //Never used and we have Vector2s??
+//    static class WorldPoint{
+//        int x;
+//        int y;
+//
+//        WorldPoint(int x, int y) {
+//            this.x = x;
+//            this.y = y;
+//        }
+//    }
+
+    //Private Fields---------------------------------------------------------------------------------------------------------------------------------
+
+    private List<Parcel> parcels = new ArrayList<Parcel>();
     int id, weight;
     Vector2 position;
 
-    static class WorldPoint{
-        int x;
-        int y;
+    //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
-        WorldPoint(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-    }
+    //Constructor(s)---------------------------------------------------------------------------------------------------------------------------------
 
-    Node(int value)
+    Node(int value)     //If this one is to be acceptable, needs a public property setPosition(), but I don't know why you wouldn't just use the other constructor that takes the position
     {
         this.id = value;
     }
@@ -26,14 +34,6 @@ public class Node
         this.id = value;
         this.position = position;
     }
-
-    //Private Fields---------------------------------------------------------------------------------------------------------------------------------
-
-    private List<Parcel> parcels = new ArrayList<Parcel>();
-
-    //Public Properties------------------------------------------------------------------------------------------------------------------------------
-
-    //Constructor------------------------------------------------------------------------------------------------------------------------------------
 
     //Methods----------------------------------------------------------------------------------------------------------------------------------------
 
