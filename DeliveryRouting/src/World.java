@@ -1,17 +1,17 @@
+import jade.core.AID;
+
 import javax.swing.JFrame;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 public class World extends JFrame
 {
     //Problem: if width != height, some bunching up of nodes on the right-hand side of the window. ==> Gonna use 700 x 700
-    private static int width = 700;    //for height = 700, width <= 800 works, >= 900 doesn't.
-    private static int height = 700;    //height > 700 too tall for screen; for width = 1000, height <= 900 works, >= 800 doesn't work.
+    private int width = 700;    //for height = 700, width <= 800 works, >= 900 doesn't.
+    private int height = 700;    //height > 700 too tall for screen; for width = 1000, height <= 900 works, >= 800 doesn't work.
 
-    NodeGraph graph;
+    private NodeGraph graph;
 
     public World()
     {
@@ -24,7 +24,7 @@ public class World extends JFrame
         setResizable(false);
     }
 
-    static NodeGraph createGraph()
+    private NodeGraph createGraph()
     {
         NodeGraph graph = new NodeGraph();
         List<Vector2> points = PoissonDiscSampling.GeneratePoints(50, new Vector2(width, height), 3);
@@ -72,11 +72,6 @@ public class World extends JFrame
 //            g.drawString(Integer.toString(node.id), (int)node.position.x , (int)node.position.y);
 //            g.drawOval((int)node.position.x - 15, (int)node.position.y - 15, 30, 30);
         }
-    }
-
-    public static void main(String[] args)
-    {
-        World w = new World();
     }
 }
 

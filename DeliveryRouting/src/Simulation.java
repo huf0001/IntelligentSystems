@@ -8,9 +8,7 @@ public class Simulation
 {
     //Private Fields---------------------------------------------------------------------------------------------------------------------------------
 
-    private Random random = new Random();
-    private float minWeightLimit = 10;
-    private float maxWeightLimit = 20;
+    private static Random random = new Random();
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
@@ -18,14 +16,23 @@ public class Simulation
 
     //Methods----------------------------------------------------------------------------------------------------------------------------------------
 
-    void main()
+    private static float RandomFloatBetween(float min, float max)
     {
+        return random.nextFloat() * (max - min) + min;
+    }
+
+    //Main-------------------------------------------------------------------------------------------------------------------------------------------
+
+    public static void main(String[] args)
+    {
+        float minWeightLimit = 10;
+        float maxWeightLimit = 20;
+        int numTrucks = 10;
+
         World world = new World();
         Depot depot;
         List<Truck> trucks = new ArrayList<>();
         List<AID> truckAIDs = new ArrayList<>();
-        int numTrucks = 10;
-
 
         for (int i = 0; i < numTrucks; i++)
         {
@@ -34,10 +41,5 @@ public class Simulation
         }
 
         depot = new Depot(truckAIDs);
-    }
-
-    private float RandomFloatBetween(float min, float max)
-    {
-        return random.nextFloat() * (max - min) + min;
     }
 }
