@@ -7,11 +7,16 @@ import java.util.List;
 
 public class World extends JFrame
 {
+    //Private Fields---------------------------------------------------------------------------------------------------------------------------------
+
     //Problem: if width != height, some bunching up of nodes on the right-hand side of the window. ==> Gonna use 700 x 700
     private int width = 700;    //for height = 700, width <= 800 works, >= 900 doesn't.
     private int height = 700;    //height > 700 too tall for screen; for width = 1000, height <= 900 works, >= 800 doesn't work.
-
     private NodeGraph graph;
+
+    //Public Properties------------------------------------------------------------------------------------------------------------------------------
+
+    //Constructor------------------------------------------------------------------------------------------------------------------------------------
 
     public World()
     {
@@ -23,6 +28,8 @@ public class World extends JFrame
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
     }
+
+    //Methods----------------------------------------------------------------------------------------------------------------------------------------
 
     private NodeGraph createGraph()
     {

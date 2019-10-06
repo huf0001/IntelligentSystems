@@ -6,8 +6,6 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 
-import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +18,8 @@ public class Truck extends Agent
     private List<Parcel> parcels;
     private Node currentNode;
     private List<Road> route;
+    private Vector2 position;
+    private float speed = 1;
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
@@ -207,10 +207,23 @@ public class Truck extends Agent
 
     private void GoToNextNode ()
     {
-        throw new UnsupportedOperationException("Not implemented");
+        double distance = Vector2.distance(position, currentNode.position);
+        Vector2 toCurrentNode = currentNode.position.minus(position);
+
+        toCurrentNode.normalize();
+        toCurrentNode.multiply(speed < distance ? speed : distance);
+        position.add(toCurrentNode);
+
+        if (position == currentNode.position)
+        {
+            DeliverParcels();
+        }
+
+        route.remove(0);
+        currentNode = route.get(0).getDestination();
     }
 
-    private void DropOffParcel ()
+    private void DeliverParcels()
     {
         List<Parcel> delivery = new ArrayList<Parcel>();
 

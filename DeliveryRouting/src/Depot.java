@@ -190,11 +190,20 @@ public class Depot extends Agent
                 switch (step) {
                     case 0:
                         // Give to all trucks at depot
-                        for (AID truck : trucksAtDepot) {
+                        for (AID truck : trucksAtDepot)
+                        {
                             ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
 
                             // Setup inform values
-                            inform.setContentObject((java.io.Serializable) truckParcels.get(truck));
+                            try
+                            {
+                                inform.setContentObject((java.io.Serializable) truckParcels.get(truck));
+                            }
+                            catch (IOException e)
+                            {
+                                e.printStackTrace();
+                            }
+
                             inform.setConversationId("Parcels");
                             inform.setReplyWith("inform" + System.currentTimeMillis()); // Unique ID
 

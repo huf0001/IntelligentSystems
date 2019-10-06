@@ -10,6 +10,7 @@ public static List<Vector2> GeneratePoints(float radius, Vector2 sampleRegionSiz
 
     double cellSize = (radius/Math.sqrt(2));
     int[][] grid = new int[(int) Math.ceil(sampleRegionSize.x/cellSize)][(int) Math.ceil(sampleRegionSize.y/cellSize)];
+
     List<Vector2> points = new ArrayList<>();
     List<Vector2> spawnPoints = new ArrayList<>();
 
@@ -51,12 +52,13 @@ public static List<Vector2> GeneratePoints(float radius, Vector2 sampleRegionSiz
             int cellX = (int)(candidate.x/cellSize);
             int cellY = (int)(candidate.y/cellSize);
             int searchStartX = Math.max(0, cellX - 2);
-            int searchEndX = Math.min(cellX + 2, grid[0].length - 1);
+            int searchEndX = Math.min(cellX + 2, grid.length - 1);
             int searchStartY = Math.max(0, cellY - 2);
-            int searchEndY = Math.min(cellY + 2, grid[1].length - 1);
+            int searchEndY = Math.min(cellY + 2, grid[0].length - 1);
 
             for(int x = searchStartX; x <= searchEndX; x++){
                 for(int y = searchStartY; y <= searchEndY; y++){
+//                    System.out.println("x : " + x + " y : " + y);
                     int pointIndex = grid[x][y] - 1;
                     if (pointIndex != -1 ){
                         double sqrDst = (candidate.minus((points.get(pointIndex)))).sqrMagnitude();
