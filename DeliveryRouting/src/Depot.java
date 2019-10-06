@@ -44,18 +44,33 @@ public class Depot extends Agent
 
     private void AssignParcels(){
         Model m = new Model("Parcel Assignment for Trucks");
-        BoolVar[][] assignment = m.boolVarMatrix(parcels.size(), trucksAtDepot.size());
+        int numParcels = parcels.length;
+        int numTrucks = trucksAtDepot.size();
+        BoolVar[][] assignment = m.boolVarMatrix(numParcels, numTrucks);
 
         // Check num of trucks assigned to parcel = 1
-        for (int i = 0; i < assignment[0].length; i++)
+        for (int i = 0; i < numParcels; i++)
         {
-            m.sum(assignment[i], "=", 1);
+            m.sum(assignment[i], "=", 1).post();
         }
 
         // Check total weight of parcels <= truck weight limit
-        for (int i = 0; i < assignment[0].length; i++)
+        for (int i = 0; i < numTrucks; i++)
         {
-            m.sum(getColumn(assignment, i), "<=", 10);
+            m.sum(getColumn(assignment, i), "<=", 10).post();
+        }
+
+        Solver s = m.getSolver();
+        s.solve();
+
+        // Print solution
+        for (int i = 0; i < numParcels; i++)
+        {
+            for (int j = 0; j < numTrucks; j++)
+            {
+                System.out.print(assignment[i][j].getValue());
+            }
+            System.out.println();
         }
     }
 
