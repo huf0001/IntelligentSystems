@@ -217,10 +217,9 @@ public class Truck extends Agent
         if (position == currentNode.position)
         {
             DeliverParcels();
+            route.remove(0);
+            currentNode = route.get(0).getDestination();
         }
-
-        route.remove(0);
-        currentNode = route.get(0).getDestination();
     }
 
     private void DeliverParcels()
