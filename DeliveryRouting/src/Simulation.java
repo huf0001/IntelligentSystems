@@ -1,14 +1,15 @@
 import jade.core.AID;
 
+import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 public class Simulation
 {
     //Private Fields---------------------------------------------------------------------------------------------------------------------------------
-
-    private static Random random = new Random();
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
@@ -16,31 +17,34 @@ public class Simulation
 
     //Methods----------------------------------------------------------------------------------------------------------------------------------------
 
-    private static float RandomFloatBetween(float min, float max)
-    {
-        return random.nextFloat() * (max - min) + min;
-    }
-
     //Main-------------------------------------------------------------------------------------------------------------------------------------------
 
     public static void main(String[] args)
     {
-        float minWeightLimit = 10;
-        float maxWeightLimit = 20;
-        int numTrucks = 10;
+        JFrame frame = new JFrame("Delivery Routing");
+        World world = new World();
+        boolean finished = false;
 
-        Depot depot;
-        List<Truck> trucks = new ArrayList<>();
-        List<AID> truckAIDs = new ArrayList<>();
-        //Vector2 depotPos = world.getGraph().getDepotNode().position;
+        frame.add(world);
+        frame.setSize(world.getWidth(), world.getHeight());
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setResizable(false);
 
-        for (int i = 0; i < numTrucks; i++)
+        while (!finished)
         {
-            trucks.add(new Truck(new Vector2(), RandomFloatBetween(minWeightLimit, maxWeightLimit)));
-            truckAIDs.add(trucks.get(i).getAID());
-        }
+            world.updateTrucks();
+            world.repaint();
 
-        depot = new Depot(truckAIDs);
-        World world = new World(trucks);
+            try
+            {
+                TimeUnit.MILLISECONDS.sleep(1000/60);
+            }
+            catch(Exception e)
+            {
+
+            }
+        }
     }
 }

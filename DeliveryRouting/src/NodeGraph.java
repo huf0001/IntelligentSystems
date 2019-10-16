@@ -26,6 +26,7 @@ public class NodeGraph {
         adjNodes.values().stream().forEach(e -> e.remove(n));
         adjNodes.remove(n);
     }
+
     void addEdge(int src, int dest){
         Node n1 = getNodeWithID(src);
         Node n2 = getNodeWithID(dest);
@@ -39,6 +40,7 @@ public class NodeGraph {
         adjNodes.get(n1).add(n2);
         adjNodes.get(n2).add(n1);
     }
+
     void removeEdge(int src, int dest) {
         Node n1 = getNodeWithID(src);
         Node n2 = getNodeWithID(dest);
@@ -50,7 +52,7 @@ public class NodeGraph {
             eN2.remove(n1);
     }
 
-    private Node getNodeWithID(int id){
+    public Node getNodeWithID(int id){
         for (Node n : adjNodes.keySet()){
             if(n.id == id){
                 return n;
@@ -68,11 +70,6 @@ public class NodeGraph {
         return null;
     }
 
-    public Node getDepotNode()
-    {
-        return getNodeWithID(0);
-    }
-
     void addEdgesInRange(Node node, int radius){
         double dist;
         for (Node n : adjNodes.keySet()){
@@ -82,7 +79,6 @@ public class NodeGraph {
             }
         }
     }
-
 
     boolean checkPoint(Vector2 w, int radius){
         boolean result = true;

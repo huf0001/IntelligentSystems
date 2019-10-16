@@ -13,12 +13,13 @@ public class Truck extends Agent
 {
     //Private Fields --------------------------------------------------------------------------------------------------------------------------------
 
+    private World world;    //For testing
     private AID truckDepot;
-    private float weightLimit;
-    private List<Parcel> parcels;
-    private Node currentNode;
-    private List<Road> route;
+    private List<Road> route = new ArrayList<Road>();
+    private List<Parcel> parcels = new ArrayList<Parcel>();
+    private Node currentDestination;
     private Vector2 position;
+    private float weightLimit;
     private float speed = 1;
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
@@ -28,16 +29,13 @@ public class Truck extends Agent
         return position;
     }
 
-    public void setPosition(Vector2 value)
-    {
-        position = value;
-    }
-
     //Constructor------------------------------------------------------------------------------------------------------------------------------------
 
-    public Truck(Vector2 position, float weightLimit)
+    public Truck(World world, Node startNode, float weightLimit)
     {
-        this.position = position;
+        this.world = world;
+        this.currentDestination = startNode;
+        this.position = startNode.position;
         this.weightLimit = weightLimit;
     }
 
@@ -173,8 +171,13 @@ public class Truck extends Agent
                         {
                             try
                             {
+                                //Store route
                                 route = (List<Road>) reply.getContentObject();
                                 received = true;
+
+                                //Retrieve first destination from route
+                                currentDestination = route.get(0).getDestination();
+                                route.remove(0);
                             }
                             catch (UnreadableException e)
                             {
@@ -216,20 +219,30 @@ public class Truck extends Agent
         addBehaviour(getRoute);
     }
 
-    private void GoToNextNode ()
+    public void GoToNextNode ()
     {
-        double distance = Vector2.distance(position, currentNode.position);
-        Vector2 toCurrentNode = currentNode.position.minus(position);
+        double distance = Vector2.distance(position, currentDestination.position);
+        Vector2 toCurrentNode = currentDestination.position.minus(position);
 
         toCurrentNode.normalize();
-        toCurrentNode.multiply(speed < distance ? speed : distance);
-        position.add(toCurrentNode);
+        toCurrentNode = toCurrentNode.multiply(speed < distance ? speed : distance);
+        position = position.add(toCurrentNode);
 
-        if (position == currentNode.position)
+        if (Vector2.distance(position, currentDestination.position) == 0)
         {
             DeliverParcels();
-            route.remove(0);
-            currentNode = route.get(0).getDestination();
+
+            if (route.size() == 0)
+            {
+                currentDestination = world.getRandomNode();//For testing
+
+                //TODO: If haven't asked for new route, ask for new route
+            }
+            else
+            {
+                currentDestination = route.get(0).getDestination();
+                route.remove(0);
+            }
         }
     }
 
@@ -239,14 +252,14 @@ public class Truck extends Agent
 
         for (Parcel p : parcels)
         {
-            if (p.getDestination() == currentNode)
+            if (p.getDestination() == currentDestination)
             {
                 delivery.add(p);
             }
         }
 
         parcels.removeAll(delivery);
-        currentNode.DeliverParcels(delivery);
+        currentDestination.DeliverParcels(delivery);
 
 //        ACLMessage message = new ACLMessage(ACLMessage.INFORM);
 //
