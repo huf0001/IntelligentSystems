@@ -23,10 +23,21 @@ public class Truck extends Agent
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
+    public Vector2 getPosition()
+    {
+        return position;
+    }
+
+    public void setPosition(Vector2 value)
+    {
+        position = value;
+    }
+
     //Constructor------------------------------------------------------------------------------------------------------------------------------------
 
-    public Truck(float weightLimit)
+    public Truck(Vector2 position, float weightLimit)
     {
+        this.position = position;
         this.weightLimit = weightLimit;
     }
 

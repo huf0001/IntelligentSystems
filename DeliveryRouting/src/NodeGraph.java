@@ -68,6 +68,11 @@ public class NodeGraph {
         return null;
     }
 
+    public Node getDepotNode()
+    {
+        return getNodeWithID(0);
+    }
+
     void addEdgesInRange(Node node, int radius){
         double dist;
         for (Node n : adjNodes.keySet()){

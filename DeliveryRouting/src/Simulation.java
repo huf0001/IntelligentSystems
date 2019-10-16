@@ -29,17 +29,18 @@ public class Simulation
         float maxWeightLimit = 20;
         int numTrucks = 10;
 
-        World world = new World();
         Depot depot;
         List<Truck> trucks = new ArrayList<>();
         List<AID> truckAIDs = new ArrayList<>();
+        //Vector2 depotPos = world.getGraph().getDepotNode().position;
 
         for (int i = 0; i < numTrucks; i++)
         {
-            trucks.add(new Truck(RandomFloatBetween(minWeightLimit, maxWeightLimit)));
+            trucks.add(new Truck(new Vector2(), RandomFloatBetween(minWeightLimit, maxWeightLimit)));
             truckAIDs.add(trucks.get(i).getAID());
         }
 
         depot = new Depot(truckAIDs);
+        World world = new World(trucks);
     }
 }

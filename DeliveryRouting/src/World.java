@@ -9,18 +9,27 @@ public class World extends JFrame
 {
     //Private Fields---------------------------------------------------------------------------------------------------------------------------------
 
-    //Problem: if width != height, some bunching up of nodes on the right-hand side of the window. ==> Gonna use 700 x 700
-    private int width = 1200;    //for height = 700, width <= 800 works, >= 900 doesn't.
-    private int height = 700;    //height > 700 too tall for screen; for width = 1000, height <= 900 works, >= 800 doesn't work.
+    private int width = 1200;
+    private int height = 700;
     private NodeGraph graph;
+    private List<Truck> trucks;
+    private boolean trucksSet = false;
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
     //Constructor------------------------------------------------------------------------------------------------------------------------------------
 
-    public World()
+    public World(List<Truck> trucks)
     {
+        this.trucks = trucks;
         graph = createGraph();
+        Vector2 depotPos = graph.getDepotNode().position;
+
+        for (Truck truck : this.trucks)
+        {
+            truck.setPosition(depotPos);
+        }
+
         setTitle("Delivery Routing");
         setSize(width, height);
         setLocationRelativeTo(null);
@@ -50,6 +59,11 @@ public class World extends JFrame
 
     public void paint(Graphics g)
     {
+        //Note: each new thing rendered gets rendered on top of everything else that's already been rendered
+
+        //Render Roads
+        g.setColor(Color.BLACK);
+
         for(Map.Entry<Node, List<Node>> entry : graph.adjNodes.entrySet())
         {
             Node node = entry.getKey();
@@ -60,24 +74,22 @@ public class World extends JFrame
             {
                 g.drawLine((int)n.position.x, (int)n.position.y, (int)node.position.x, (int)node.position.y);
             }
+        }
 
-            if(node.id == 0)
-            {
-                g.setColor(Color.RED);
-                g.fillOval((int)node.position.x - 5, (int)node.position.y- 5, 10, 10);
-                g.setColor(Color.BLACK);
+        //Render Nodes
+        for(Map.Entry<Node, List<Node>> entry : graph.adjNodes.entrySet())
+        {
+            Node node = entry.getKey();
+            g.setColor(node.id == 0 ? Color.RED : Color.BLUE);
+            g.fillOval((int)node.position.x - 5, (int)node.position.y- 5, 10, 10);
+        }
 
-            }
-            else
-            {
-                g.setColor(Color.BLUE);
-                g.fillOval((int)node.position.x - 5, (int)node.position.y- 5, 10, 10);
-                g.setColor(Color.BLACK);
-            }
+        //Render Trucks
+        g.setColor(Color.BLACK);
 
-//            g.fillOval((int)node.position.x - 5, (int)node.position.y - 5, 10, 10);
-//            g.drawString(Integer.toString(node.id), (int)node.position.x , (int)node.position.y);
-//            g.drawOval((int)node.position.x - 15, (int)node.position.y - 15, 30, 30);
+        for (Truck truck : trucks)
+        {
+            g.drawOval((int)truck.getPosition().x - 10, (int)truck.getPosition().y- 10, 20, 20);
         }
     }
 }
