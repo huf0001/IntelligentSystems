@@ -219,7 +219,7 @@ public class Depot extends Agent
                                 e.printStackTrace();
                             }
 
-                            inform.setConversationId("Parcels");
+                            inform.setConversationId("Parcel_Allocation");
                             inform.setReplyWith("inform" + System.currentTimeMillis()); // Unique ID
 
                             inform.addReceiver(truck);
@@ -230,7 +230,7 @@ public class Depot extends Agent
                         }
 
                         // Setup template to receive responses
-                        mt = MessageTemplate.MatchConversationId("Parcels");
+                        mt = MessageTemplate.MatchConversationId("Parcel_Allocation");
 
                         step = 1;
                         break;
@@ -241,11 +241,12 @@ public class Depot extends Agent
                         if (reply != null) {
                             if (reply.getPerformative() == ACLMessage.INFORM) {
                                 String answer = reply.getContent();
-                                if (answer.equals("Yes")){
-                                    responses.put(reply.getSender(), true);
-                                } else{
-                                    responses.put(reply.getSender(), false);
-                                }
+                                responses.put(reply.getSender(), answer.equals("Yes"));
+//                                if (answer.equals("Yes")){
+//                                    responses.put(reply.getSender(), true);
+//                                } else{
+//                                    responses.put(reply.getSender(), false);
+//                                }
                             }
                             truckResponsesReceived++;
                         } else {
