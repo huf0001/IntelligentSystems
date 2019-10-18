@@ -10,6 +10,7 @@ public class Parcel
 
     public Node getDestination() { return destination; }
     public void setDestination(Node value) { destination = value; }
+    public int getWeight() { return weight; }
 
     //Constructor------------------------------------------------------------------------------------------------------------------------------------
 
