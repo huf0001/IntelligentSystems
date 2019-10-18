@@ -43,7 +43,13 @@ public class Truck extends Agent
 
     protected void setup()
     {
-        CyclicBehaviour listeningBehaviour = new CyclicBehaviour(this)
+        CreateCyclicBehaviourListening();
+        CreateBehaviourRequestRoute();
+    }
+
+    private void CreateCyclicBehaviourListening()
+    {
+        CyclicBehaviour cyclicBehaviourListening = new CyclicBehaviour(this)
         {
             public void action()
             {
@@ -52,7 +58,7 @@ public class Truck extends Agent
             }
         };
 
-        addBehaviour(listeningBehaviour);
+        addBehaviour(cyclicBehaviourListening);
     }
 
     private void CheckForConstraintRequest()
@@ -134,9 +140,9 @@ public class Truck extends Agent
         }
     }
 
-    private void GetRoute ()
+    private void CreateBehaviourRequestRoute()
     {
-        Behaviour getRoute = new Behaviour(this)
+        Behaviour behaviourRequestRoute = new Behaviour(this)
         {
             private int step;
             private MessageTemplate mt;
@@ -216,7 +222,7 @@ public class Truck extends Agent
             }
         };
 
-        addBehaviour(getRoute);
+        addBehaviour(behaviourRequestRoute);
     }
 
     public void GoToNextNode ()
