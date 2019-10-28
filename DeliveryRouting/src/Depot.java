@@ -42,6 +42,7 @@ public class Depot extends Agent
         this.trucksAtDepot = trucksAtDepot;
     }
 
+/*
     private BoolVar[] getColumn(BoolVar[][] array, int index){
         BoolVar[] column = new BoolVar[array[0].length]; // Here I assume a rectangular 2D array!
         for(int i = 0; i < column.length; i++){
@@ -49,6 +50,7 @@ public class Depot extends Agent
         }
         return column;
     }
+*/
 
     protected void setup(List<AID> trucks){
         trucksAtDepot = trucks;
@@ -135,7 +137,8 @@ public class Depot extends Agent
 
         addBehaviour(behaviourRequestConstraints);
     }
-
+    
+/*
     private void AssignParcels(){
         Model m = new Model("Parcel Assignment for Trucks");
         int numParcels = parcels.length;
@@ -207,6 +210,7 @@ public class Depot extends Agent
             System.out.println();
         }
     }
+*/
 
     public void CreateRoutes()
     {
