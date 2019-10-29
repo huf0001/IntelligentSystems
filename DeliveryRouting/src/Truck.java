@@ -5,6 +5,7 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
+import org.chocosolver.solver.search.strategy.selectors.variables.Cyclic;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +46,21 @@ public class Truck extends Agent
     {
         CreateCyclicBehaviourListening();
         CreateBehaviourRequestRoute();
+        CreateCyclicBehaviourMove();
+    }
+
+    private void CreateCyclicBehaviourMove()
+    {
+        Behaviour cyclicBehaviourMove = new CyclicBehaviour()
+        {
+            public void action()
+            {
+                System.out.println(getLocalName() + ": Moving to node " + currentDestination.id);
+                GoToNextNode();
+            }
+        };
+
+        addBehaviour(cyclicBehaviourMove);
     }
 
     private void CreateCyclicBehaviourListening()
