@@ -5,7 +5,6 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
-import org.chocosolver.solver.search.strategy.selectors.variables.Cyclic;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +20,7 @@ public class Truck extends Agent
     private Node currentDestination;
     private Vector2 position;
     private float weightLimit;
-    private float speed = 1;
+    private float speed = 1f;
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
@@ -46,21 +45,6 @@ public class Truck extends Agent
     {
         CreateCyclicBehaviourListening();
         CreateBehaviourRequestRoute();
-        CreateCyclicBehaviourMove();
-    }
-
-    private void CreateCyclicBehaviourMove()
-    {
-        Behaviour cyclicBehaviourMove = new CyclicBehaviour()
-        {
-            public void action()
-            {
-                System.out.println(getLocalName() + ": Moving to node " + currentDestination.id);
-                GoToNextNode();
-            }
-        };
-
-        addBehaviour(cyclicBehaviourMove);
     }
 
     private void CreateCyclicBehaviourListening()
@@ -257,6 +241,7 @@ public class Truck extends Agent
             if (route.size() == 0)
             {
                 currentDestination = world.getRandomNode();//For testing
+                System.out.println(getLocalName() + ": New destination: Node " + currentDestination.id);
 
                 //TODO: If haven't asked for new route, ask for new route
             }
@@ -282,26 +267,6 @@ public class Truck extends Agent
 
         parcels.removeAll(delivery);
         currentDestination.DeliverParcels(delivery);
-
-//        ACLMessage message = new ACLMessage(ACLMessage.INFORM);
-//
-//        // Setup request values
-//        message.addReceiver(currentNode);
-//
-//        // Send the route according to the AID of the truck
-//        try
-//        {
-//            message.setContentObject((Serializable)droppingOff);
-//        }
-//        catch (IOException e)
-//        {
-//            e.printStackTrace();
-//        }
-//
-//        message.setConversationId("Parcel_Delivery");
-//        message.setReplyWith("request" + System.currentTimeMillis()); // Unique ID
-//
-//        // Send request
-//        send(message);
+        System.out.println(getLocalName() + ": " + parcels.size() + " parcels delivered to Node " + currentDestination.id);
     }
 }
