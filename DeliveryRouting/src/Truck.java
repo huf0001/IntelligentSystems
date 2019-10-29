@@ -21,7 +21,7 @@ public class Truck extends Agent
     private Node currentDestination;
     private Vector2 position;
     private float weightLimit;
-    private float speed = 1;
+    private float speed = 1f;
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
@@ -46,21 +46,6 @@ public class Truck extends Agent
     {
         CreateCyclicBehaviourListening();
         CreateBehaviourRequestRoute();
-        CreateCyclicBehaviourMove();
-    }
-
-    private void CreateCyclicBehaviourMove()
-    {
-        Behaviour cyclicBehaviourMove = new CyclicBehaviour()
-        {
-            public void action()
-            {
-                System.out.println(getLocalName() + ": Moving to node " + currentDestination.id);
-                GoToNextNode();
-            }
-        };
-
-        addBehaviour(cyclicBehaviourMove);
     }
 
     private void CreateCyclicBehaviourListening()
@@ -257,6 +242,7 @@ public class Truck extends Agent
             if (route.size() == 0)
             {
                 currentDestination = world.getRandomNode();//For testing
+                System.out.println(getLocalName() + ": New destination: Node " + currentDestination.id);
 
                 //TODO: If haven't asked for new route, ask for new route
             }
@@ -282,6 +268,7 @@ public class Truck extends Agent
 
         parcels.removeAll(delivery);
         currentDestination.DeliverParcels(delivery);
+        System.out.println(getLocalName() + ": " + parcels.size() + " parcels delivered to Node " + currentDestination.id);
 
 //        ACLMessage message = new ACLMessage(ACLMessage.INFORM);
 //

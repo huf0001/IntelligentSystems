@@ -90,7 +90,7 @@ public class World extends JPanel
     {
         for (Truck truck : trucks)
         {
-            //truck.GoToNextNode();   //For testing
+            truck.GoToNextNode();   //For testing
         }
     }
 

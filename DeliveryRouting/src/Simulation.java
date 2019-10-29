@@ -2,6 +2,7 @@ import jade.core.AID;
 
 import javax.swing.*;
 import java.awt.*;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -11,6 +12,7 @@ import jade.core.ProfileImpl;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
+import java.util.Calendar;
 
 public class Simulation
 {
@@ -37,6 +39,7 @@ public class Simulation
 
         JFrame frame = new JFrame("Delivery Routing");
         World world = new World();
+        Calendar cal = Calendar.getInstance();
         boolean finished = false;
 
         frame.add(world);
@@ -49,12 +52,17 @@ public class Simulation
 
         while (!finished)
         {
+            float timeAtStartOfLoop = cal.getTimeInMillis();
+
             world.updateTrucks();
             world.repaint();
 
             try
             {
-                TimeUnit.MILLISECONDS.sleep(1000/60);
+                float loopDuration = cal.getTimeInMillis() - timeAtStartOfLoop;
+                float standardDelay = 1000 / 60;
+
+                TimeUnit.MILLISECONDS.sleep(standardDelay > loopDuration ? (long)(standardDelay - loopDuration) : 0);
             }
             catch(Exception e)
             {
