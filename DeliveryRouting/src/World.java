@@ -1,4 +1,6 @@
 import jade.core.AID;
+import jade.wrapper.AgentController;
+import jade.wrapper.StaleProxyException;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -47,9 +49,20 @@ public class World extends JPanel
 
         for (int i = 0; i < numTrucks; i++)
         {
-            trucks.add(new Truck(this, depotNode, RandomFloatBetween(minWeightLimit, maxWeightLimit)));
+            Truck truck = new Truck(this, depotNode, RandomFloatBetween(minWeightLimit, maxWeightLimit));
+            trucks.add(truck);
             truckAIDs.add(trucks.get(i).getAID());
+
+            //Start the trucks on the container
+            try {
+                AgentController ag = Simulation.container.acceptNewAgent("Truck" + i, truck);
+                ag.start();
+            } catch (StaleProxyException e) {
+                e.printStackTrace();
+            }
         }
+
+
 
         depot = new Depot(truckAIDs);
     }
