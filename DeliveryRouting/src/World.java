@@ -32,6 +32,7 @@ public class World extends JPanel
     }
 
     public int getWidth() { return width; }
+    public NodeGraph getGraph() { return graph; }
 
     //Setup Methods----------------------------------------------------------------------------------------------------------------------------------
 

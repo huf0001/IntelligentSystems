@@ -10,10 +10,12 @@ public class VrpFitnessFunc extends FitnessFunction {
     private static final int PENALIZE_INCOMPLETE_DELIVERY = 125;
     private static final int PENALIZE_INCOMPLETE_TRUCK = 2;
     private static final int PENALIZE_DISTANCE = 25;
-    private final VrpConfiguration vrpConfiguration;
+    private final World world;
+    private final Depot depot;
 
-    public VrpFitnessFunc(final VrpConfiguration conf) {
-        this.vrpConfiguration = conf;
+    public VrpFitnessFunc(final World conf, final Depot depot) {
+        this.world = conf;
+        this.depot = depot;
     }
 
     /**
@@ -33,12 +35,12 @@ public class VrpFitnessFunc extends FitnessFunction {
      */
     @Override
     public double evaluate(final IChromosome chromosome) {
-        final int numberOfVehicles = this.vrpConfiguration.getNumberOfTrucks();
+        final int numberOfVehicles = depot.getNumTrucks();
         double fitness = 0;
 
         for (int i = 1; i <= numberOfVehicles; i++) {
-            fitness += computeTotalDistance(i, chromosome, vrpConfiguration) * PENALIZE_DISTANCE;
-            fitness += computeTotalDemand(i, chromosome, vrpConfiguration);
+            fitness += computeTotalDistance(i, chromosome, world.getGraph()) * PENALIZE_DISTANCE;
+            fitness += computeTotalDemand(i, chromosome, world);
         }
 
         if (fitness < 0) {
@@ -48,22 +50,22 @@ public class VrpFitnessFunc extends FitnessFunction {
         return Math.max(1, 1000000 - fitness);
     }
 
-    public static double computeTotalCoveredDemand(int vehicleNumber, IChromosome chromosome, VrpConfiguration vrpConfiguration) {
-        final List<Integer> positions = getPositions(vehicleNumber, chromosome, vrpConfiguration, false);
+    public static double computeTotalCoveredDemand(int vehicleNumber, IChromosome chromosome, NodeGraph graph) {
+        final List<Integer> positions = getPositions(vehicleNumber, chromosome, graph, false);
 
 
         double totalCoveredBySolution = 0.0;
         for (int pos : positions) {
-            final Node node = vrpConfiguration.getNode(pos);
+            final Node node = graph.getNodeWithID(pos);
             totalCoveredBySolution += node.getDemand();
         }
 
         return totalCoveredBySolution;
     }
 
-    private static double computeTotalDemand(int vehicleNumber, IChromosome chromosome, VrpConfiguration vrpConfiguration) {
-        final double totalCoveredBySolution = computeTotalCoveredDemand(vehicleNumber, chromosome, vrpConfiguration);
-        final double vehicleCapacity = vrpConfiguration.getVehicleCapacity();
+    private static double computeTotalDemand(int vehicleNumber, IChromosome chromosome, World world) {
+        final double totalCoveredBySolution = computeTotalCoveredDemand(vehicleNumber, chromosome, world.getGraph());
+        final double vehicleCapacity = world.getVehicleCapacity();
 
         if (totalCoveredBySolution > vehicleCapacity) {//can't complete delivery
             return (totalCoveredBySolution - vehicleCapacity) * PENALIZE_INCOMPLETE_DELIVERY;
@@ -71,21 +73,21 @@ public class VrpFitnessFunc extends FitnessFunction {
         return (vehicleCapacity - totalCoveredBySolution) * PENALIZE_INCOMPLETE_TRUCK;//unused capacity
     }
 
-    public static double computeTotalDistance(int vehicleNumber, IChromosome chromosome, VrpConfiguration vrpConfiguration) {
+    public static double computeTotalDistance(int vehicleNumber, IChromosome chromosome, NodeGraph graph) {
         double totalDistance = 0.0;
-        final List<Integer> positions = getPositions(vehicleNumber, chromosome, vrpConfiguration, true);
+        final List<Integer> positions = getPositions(vehicleNumber, chromosome, graph, true);
 
-        final Node store = vrpConfiguration.getNode(0);//first node represents the starting point
+        final Node store = graph.getNodeWithID(0);//first node represents the starting point
 
         Node lastVisited = store;
 
         for (int pos : positions) {
-            final Node node = vrpConfiguration.getNode(pos);
-            totalDistance += lastVisited.distanceTo(node);
+            final Node node = graph.getNodeWithID(pos);
+            totalDistance += Vector2.distance(lastVisited.position, node.position);//lastVisited.distanceTo(node);
             lastVisited = node;
         }
 
-        totalDistance += lastVisited.distanceTo(store);//distance back to the store
+        totalDistance += Vector2.distance(lastVisited.position, store.position);//lastVisited.distanceTo(store);//distance back to the store
 
         return totalDistance;
     }
@@ -98,14 +100,14 @@ public class VrpFitnessFunc extends FitnessFunction {
      *
      * @param vehicleNumber given vehicle
      * @param chromosome    to be decoded
-     * @param configuration existing configuration
+     * @param graph existing configuration
      * @param order         if nodes need to be sorted
      * @return sequence of nodes representing the track of the given vehicle
      */
-    public static List<Integer> getPositions(final int vehicleNumber, final IChromosome chromosome, final VrpConfiguration configuration, final boolean order) {
+    public static List<Integer> getPositions(final int vehicleNumber, final IChromosome chromosome, final NodeGraph graph, final boolean order) {
         final List<Integer> route = new ArrayList<>();
         final List<Double> positions = new ArrayList<>();
-        final int graphDimension = configuration.getGraphDimension();
+        final int graphDimension = graph.adjNodes.size();
         for (int i = 1; i < graphDimension; ++i) {
             int chromosomeValue = (Integer) chromosome.getGene(i).getAllele();
             if (chromosomeValue == vehicleNumber) {

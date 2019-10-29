@@ -17,14 +17,21 @@ import org.chocosolver.solver.search.strategy.assignments.DecisionOperatorFactor
 import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.tools.ArrayUtils;
+import org.jgap.*;
+import org.jgap.impl.DefaultConfiguration;
+import org.jgap.impl.DoubleGene;
+import org.jgap.impl.IntegerGene;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Depot extends Agent
 {
@@ -36,21 +43,87 @@ public class Depot extends Agent
     private Map<AID, List<Parcel>> truckParcels = new HashMap<AID, List<Parcel>>();
     private List<Node> unroutedNodes;
     private List<Node> routedNodes;
+    private int numTrucks;
+
+    private static Logger log = LoggerFactory.getLogger(Depot.class);
+    private static final int EVOLUTIONS = 2000;
+    private static final int POPULATION_SIZE = 350;
 
     public Depot(List<AID> trucksAtDepot)
     {
         this.trucksAtDepot = trucksAtDepot;
+        numTrucks = trucksAtDepot.size();
     }
 
-/*
-    private BoolVar[] getColumn(BoolVar[][] array, int index){
-        BoolVar[] column = new BoolVar[array[0].length]; // Here I assume a rectangular 2D array!
-        for(int i = 0; i < column.length; i++){
-            column[i] = array[i][index];
+    public void StartVRP() throws Exception {
+        final Configuration configuration = new DefaultConfiguration();
+        final World world = this.world;//new VrpConfig(numTrucks);
+        configuration.setPreservFittestIndividual(true);
+        configuration.setFitnessFunction(new VrpFitnessFunc(world, this));
+        configuration.setPopulationSize(POPULATION_SIZE);
+
+        log.info("Loaded vrp configuration:\n" + world);
+
+        final int graphDimension = world.getGraph().adjNodes.size();
+        final Gene[] genes = new Gene[2 * graphDimension];
+        for (int i = 0; i < graphDimension; i++) {
+            genes[i] = new IntegerGene(configuration, 1, numTrucks);
+            genes[i + graphDimension] = new DoubleGene(configuration, 0, 45);//to keep order of nodes
         }
-        return column;
+
+        configuration.setSampleChromosome(new Chromosome(configuration, genes));
+        final Genotype population = Genotype.randomInitialGenotype(configuration);
+
+        final Instant start = Instant.now();
+        log.info("Generations: " + EVOLUTIONS);
+        for (int i = 1; i <= EVOLUTIONS; i++) {
+            if (i % 100 == 0) {
+                final IChromosome bestSolution = population.getFittestChromosome();
+                log.info("Best fitness after " + i + " evolutions: " + bestSolution.getFitnessValue());
+                double total = 0;
+                final List<Double> demands = new ArrayList<>();
+                for (int j = 1; j <= numTrucks; ++j) {
+                    final double distanceRoute = VrpFitnessFunc.computeTotalDistance(j, bestSolution, world.getGraph());
+                    final double demand = VrpFitnessFunc.computeTotalCoveredDemand(j, bestSolution, world.getGraph());
+                    total += distanceRoute;
+                    demands.add(demand);
+                }
+                log.info("Total distance: " + total);
+                log.info("Covered demands: " + demands);
+            }
+            population.evolve();
+        }
+
+        log.info("Execution time: " + Duration.between(start, Instant.now()));
+
+        final IChromosome bestSolution = population.getFittestChromosome();
+
+        log.info("Best fitness: " + bestSolution.getFitnessValue());
+        log.info("Result: ");
+        for (int i = 0; i < 2 * graphDimension; i++) {
+            log.info((i + 1) + ". " + bestSolution.getGene(i).getAllele());
+        }
+
+        double total = 0.0;
+
+        for (int i = 1; i <= numTrucks; ++i) {
+            final List<Integer> route = VrpFitnessFunc.getPositions(i, bestSolution, world.getGraph(), true);
+            final double distanceRoute = VrpFitnessFunc.computeTotalDistance(i, bestSolution, world.getGraph());
+            final double demand = VrpFitnessFunc.computeTotalCoveredDemand(i, bestSolution, world.getGraph());
+            log.info("Vehicle #" + i + " :" + formatRoute(route));
+            log.info("Distance: " + distanceRoute);
+            log.info("Demand: " + demand);
+            total += distanceRoute;
+        }
+        log.info("Total distance: " + total);
+
     }
-*/
+
+    private static List<Integer> formatRoute(List<Integer> list) {
+        final List<Integer> result = new ArrayList<>(Collections.singletonList(1));//source node
+        result.addAll(list.stream().map(aList -> aList + 1).collect(Collectors.toList()));
+        return result;
+    }
 
     protected void setup(List<AID> trucks){
         trucksAtDepot = trucks;
@@ -64,6 +137,8 @@ public class Depot extends Agent
 
         CreateCyclicBehaviourCheckForRouteRequests();
     }
+
+    public int getNumTrucks() { return numTrucks; }
 
     public void GetParcels(){
         try {
