@@ -5,7 +5,6 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
-import org.chocosolver.solver.search.strategy.selectors.variables.Cyclic;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -269,26 +268,5 @@ public class Truck extends Agent
         parcels.removeAll(delivery);
         currentDestination.DeliverParcels(delivery);
         System.out.println(getLocalName() + ": " + parcels.size() + " parcels delivered to Node " + currentDestination.id);
-
-//        ACLMessage message = new ACLMessage(ACLMessage.INFORM);
-//
-//        // Setup request values
-//        message.addReceiver(currentNode);
-//
-//        // Send the route according to the AID of the truck
-//        try
-//        {
-//            message.setContentObject((Serializable)droppingOff);
-//        }
-//        catch (IOException e)
-//        {
-//            e.printStackTrace();
-//        }
-//
-//        message.setConversationId("Parcel_Delivery");
-//        message.setReplyWith("request" + System.currentTimeMillis()); // Unique ID
-//
-//        // Send request
-//        send(message);
     }
 }
