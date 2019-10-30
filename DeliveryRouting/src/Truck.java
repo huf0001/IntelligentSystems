@@ -29,6 +29,11 @@ public class Truck extends Agent
         return position;
     }
 
+    public float getWeightLimit()
+    {
+        return weightLimit;
+    }
+
     //Constructor------------------------------------------------------------------------------------------------------------------------------------
 
     public Truck(World world, Node startNode, float weightLimit)

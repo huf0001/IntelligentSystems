@@ -26,6 +26,8 @@ public class World extends JPanel
 
     public int getHeight() { return height; }
 
+    public List<Truck> getTrucks() { return trucks; }
+
     //For testing--------------------------------------------------------------
     public Node getRandomNode()
     {
@@ -63,9 +65,13 @@ public class World extends JPanel
             }
         }
 
-
-
         depot = new Depot(truckAIDs);
+        try {
+            depot.StartVRP();
+        }
+        catch (Exception e) {
+
+        }
     }
 
     private NodeGraph createGraph()

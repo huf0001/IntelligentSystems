@@ -57,7 +57,7 @@ public class Depot extends Agent
 
     public void StartVRP() throws Exception {
         final Configuration configuration = new DefaultConfiguration();
-        final World world = this.world;//new VrpConfig(numTrucks);
+        final World world = this.world;
         configuration.setPreservFittestIndividual(true);
         configuration.setFitnessFunction(new VrpFitnessFunc(world, this));
         configuration.setPopulationSize(POPULATION_SIZE);
@@ -117,6 +117,20 @@ public class Depot extends Agent
         }
         log.info("Total distance: " + total);
 
+    }
+
+    public int getNodeDemand(Node node)
+    {
+        int totalWeight = 0;
+        for (Parcel p: parcels)
+        {
+            if (p.getDestination() == node)
+            {
+                totalWeight += p.getWeight();
+            }
+        }
+
+        return totalWeight;
     }
 
     private static List<Integer> formatRoute(List<Integer> list) {

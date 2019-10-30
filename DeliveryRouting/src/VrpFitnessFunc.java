@@ -11,7 +11,7 @@ public class VrpFitnessFunc extends FitnessFunction {
     private static final int PENALIZE_INCOMPLETE_TRUCK = 2;
     private static final int PENALIZE_DISTANCE = 25;
     private final World world;
-    private final Depot depot;
+    private static Depot depot = null;
 
     public VrpFitnessFunc(final World conf, final Depot depot) {
         this.world = conf;
@@ -38,7 +38,7 @@ public class VrpFitnessFunc extends FitnessFunction {
         final int numberOfVehicles = depot.getNumTrucks();
         double fitness = 0;
 
-        for (int i = 1; i <= numberOfVehicles; i++) {
+        for (int i = 0; i < numberOfVehicles; i++) {
             fitness += computeTotalDistance(i, chromosome, world.getGraph()) * PENALIZE_DISTANCE;
             fitness += computeTotalDemand(i, chromosome, world);
         }
@@ -53,11 +53,10 @@ public class VrpFitnessFunc extends FitnessFunction {
     public static double computeTotalCoveredDemand(int vehicleNumber, IChromosome chromosome, NodeGraph graph) {
         final List<Integer> positions = getPositions(vehicleNumber, chromosome, graph, false);
 
-
         double totalCoveredBySolution = 0.0;
         for (int pos : positions) {
             final Node node = graph.getNodeWithID(pos);
-            totalCoveredBySolution += node.getDemand();
+            totalCoveredBySolution += depot.getNodeDemand(node);
         }
 
         return totalCoveredBySolution;
@@ -65,7 +64,7 @@ public class VrpFitnessFunc extends FitnessFunction {
 
     private static double computeTotalDemand(int vehicleNumber, IChromosome chromosome, World world) {
         final double totalCoveredBySolution = computeTotalCoveredDemand(vehicleNumber, chromosome, world.getGraph());
-        final double vehicleCapacity = world.getVehicleCapacity();
+        final double vehicleCapacity = world.getTrucks().get(vehicleNumber).getWeightLimit();
 
         if (totalCoveredBySolution > vehicleCapacity) {//can't complete delivery
             return (totalCoveredBySolution - vehicleCapacity) * PENALIZE_INCOMPLETE_DELIVERY;
