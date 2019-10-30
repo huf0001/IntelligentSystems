@@ -15,7 +15,7 @@ public class Truck extends Agent
 
     private World world;    //For testing
     private AID truckDepot;
-    private List<Road> route = new ArrayList<Road>();
+    private List<Node> route = new ArrayList<Node>();
     private List<Parcel> parcels = new ArrayList<Parcel>();
     private Node currentDestination;
     private Vector2 position;
@@ -23,6 +23,17 @@ public class Truck extends Agent
     private float speed = 1f;
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
+
+    public void setRoute(List<Integer> value)
+    {
+        List<Node> route= new ArrayList<Node>();
+        for (Integer i : value)
+        {
+            route.add(world.getGraph().getNodeWithID(i));
+        }
+
+        this.route = route;
+    }
 
     public Vector2 getPosition()
     {
@@ -183,11 +194,11 @@ public class Truck extends Agent
                             try
                             {
                                 //Store route
-                                route = (List<Road>) reply.getContentObject();
+                                route = (List<Node>) reply.getContentObject();
                                 received = true;
 
                                 //Retrieve first destination from route
-                                currentDestination = route.get(0).getDestination();
+                                currentDestination = route.get(0);
                                 route.remove(0);
                             }
                             catch (UnreadableException e)
@@ -245,14 +256,14 @@ public class Truck extends Agent
 
             if (route.size() == 0)
             {
-                currentDestination = world.getRandomNode();//For testing
-                System.out.println(getLocalName() + ": New destination: Node " + currentDestination.id);
+                //currentDestination = world.getRandomNode();//For testing
+                //System.out.println(getLocalName() + ": New destination: Node " + currentDestination.id);
 
                 //TODO: If haven't asked for new route, ask for new route
             }
             else
             {
-                currentDestination = route.get(0).getDestination();
+                currentDestination = route.get(0);
                 route.remove(0);
             }
         }

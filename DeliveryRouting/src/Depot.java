@@ -71,7 +71,7 @@ public class Depot extends Agent
 
         log.info("Loaded vrp configuration:\n" + world.toString());
 
-        final int graphDimension = nodesWithParcelsAssigned.size();forkfork
+        final int graphDimension = nodesWithParcelsAssigned.size();
         final Gene[] genes = new Gene[2 * graphDimension];
         for (int i = 0; i < graphDimension; i++) {
             genes[i] = new IntegerGene(configuration, 1, numTrucks);
@@ -121,6 +121,8 @@ public class Depot extends Agent
             log.info("Distance: " + distanceRoute);
             log.info("Demand: " + demand);
             total += distanceRoute;
+
+            world.getTrucks().get(i - 1).setRoute(route);
         }
         log.info("Total distance: " + total);
 
@@ -249,85 +251,6 @@ public class Depot extends Agent
         };
 
         addBehaviour(behaviourRequestConstraints);
-    }
-    
-/*
-    private void AssignParcels(){
-        Model m = new Model("Parcel Assignment for Trucks");
-        int numParcels = parcels.length;
-        int numTrucks = trucksAtDepot.size();
-        BoolVar[][] assignment = m.boolVarMatrix(numParcels, numTrucks);
-
-        // Check num of trucks assigned to parcel = 1
-        for (int i = 0; i < numParcels; i++)
-        {
-            m.sum(assignment[i], "=", 1).post();
-        }
-
-        // Check total weight of parcels <= truck weight limit
-        for (int i = 0; i < numTrucks; i++)
-        {
-            m.sum(getColumn(assignment, i), "<=", Math.round(truckCapacity.get(trucksAtDepot.get(i)))).post();
-        }
-
-        Solver s = m.getSolver();
-        s.solve();
-
-        // Print solution
-        for (int i = 0; i < numParcels; i++)
-        {
-            for (int j = 0; j < numTrucks; j++)
-            {
-                System.out.print(assignment[i][j].getValue());
-            }
-            System.out.println();
-        }
-    }
-
-    private void AssignParcelsWithWeights(){
-        Model m = new Model("Parcel Assignment for Trucks");
-        int numParcels = parcels.length;
-        int numTrucks = trucksAtDepot.size();
-        BoolVar[][] assignment = m.boolVarMatrix(numParcels, numTrucks);
-
-        // Check num of trucks assigned to parcel = 1
-        for (int i = 0; i < numParcels; i++)
-        {
-            m.sum(assignment[i], "=", 1).post();
-        }
-
-        // Check total weight of parcels <= truck weight limit
-        for (int i = 0; i < numTrucks; i++)
-        {
-            IntVar[] weights = getColumn(assignment, 1);
-            for (int j = 0; j < numParcels; j++)
-            {
-                int weight = weights[j].getValue();
-                weight *= parcels[j].getWeight();
-                weights[j] = m.intVar(weight);
-            }
-
-            m.sum(weights, "<=", Math.round(truckCapacity.get(trucksAtDepot.get(i)))).post();
-        }
-
-        Solver s = m.getSolver();
-        s.solve();
-
-        // Print solution
-        for (int i = 0; i < numParcels; i++)
-        {
-            for (int j = 0; j < numTrucks; j++)
-            {
-                System.out.print(assignment[i][j].getValue());
-            }
-            System.out.println();
-        }
-    }
-*/
-
-    public void CreateRoutes()
-    {
-        throw new UnsupportedOperationException("Not implemented");
     }
 
     public void CreateBehaviourAllocateParcels() {
