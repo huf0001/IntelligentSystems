@@ -160,9 +160,16 @@ public class Depot extends Agent
         return totalWeight;
     }
 
-    private static List<Integer> formatRoute(List<Integer> list) {
-        final List<Integer> result = new ArrayList<>(Collections.singletonList(1));//source node
+    private List<Integer> formatRoute(List<Integer> list) {
+        final List<Integer> result = new ArrayList<>(Collections.singletonList(0));//source node
         result.addAll(list.stream().map(aList -> aList + 1).collect(Collectors.toList()));
+
+        for (int i = 0; i < result.size(); i++)
+        {
+            result.set(i, nodesWithParcelsAssigned.get(result.get(i)).id);
+            //System.out.println(result.get(i));
+        }
+
         return result;
     }
 

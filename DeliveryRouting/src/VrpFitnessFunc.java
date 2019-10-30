@@ -55,8 +55,8 @@ public class VrpFitnessFunc extends FitnessFunction {
         final List<Integer> positions = getPositions(vehicleNumber, chromosome, graph, false);
 
         double totalCoveredBySolution = 0.0;
-        for (int pos : positions) {
-            final Node node = graph.getNodeWithID(pos);
+        for (int i = 0; i < positions.size(); i++) {
+            final Node node = depot.GetNodesWithParcelsAssigned().get(positions.get(i));//graph.getNodeWithID(pos);
             totalCoveredBySolution += depot.getNodeDemand(node);
         }
         //if (totalCoveredBySolution == 0) System.out.println("truck has no parcels");
@@ -87,7 +87,7 @@ public class VrpFitnessFunc extends FitnessFunction {
         Node lastVisited = store;
 
         for (int pos : positions) {
-            final Node node = graph.getNodeWithID(pos);
+            final Node node = depot.GetNodesWithParcelsAssigned().get(pos);//graph.getNodeWithID(pos);
             totalDistance += Vector2.distance(lastVisited.position, node.position);//lastVisited.distanceTo(node);
             lastVisited = node;
         }
