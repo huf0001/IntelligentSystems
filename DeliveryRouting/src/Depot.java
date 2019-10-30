@@ -57,9 +57,10 @@ public class Depot extends Agent
         GetParcels();
         for (Parcel p : parcels)
         {
-            Node randNode = world.getRandomNode();
-            p.setDestination(randNode);
-            nodesWithParcelsAssigned.add(randNode);
+            int randNode = world.getRandomNode().id;
+            p.setDestination(world.getGraph().getNodeWithID(randNode));
+            nodesWithParcelsAssigned.add(world.getGraph().getNodeWithID(randNode));
+            System.out.println(randNode);
         }
     }
 
@@ -90,7 +91,7 @@ public class Depot extends Agent
                 double total = 0;
                 final List<Double> demands = new ArrayList<>();
                 for (int j = 1; j <= numTrucks; ++j) {
-                    final double distanceRoute = VrpFitnessFunc.computeTotalDistance(j, bestSolution, world.getGraph());
+                    final double distanceRoute = VrpFitnessFunc.computeTotalDistance(j - 1, bestSolution, world.getGraph());
                     final double demand = VrpFitnessFunc.computeTotalCoveredDemand(j, bestSolution, world.getGraph());
                     total += distanceRoute;
                     demands.add(demand);
@@ -115,7 +116,7 @@ public class Depot extends Agent
 
         for (int i = 1; i <= numTrucks; ++i) {
             final List<Integer> route = VrpFitnessFunc.getPositions(i, bestSolution, world.getGraph(), true);
-            final double distanceRoute = VrpFitnessFunc.computeTotalDistance(i, bestSolution, world.getGraph());
+            final double distanceRoute = VrpFitnessFunc.computeTotalDistance(i - 1, bestSolution, world.getGraph());
             final double demand = VrpFitnessFunc.computeTotalCoveredDemand(i, bestSolution, world.getGraph());
             log.info("Vehicle #" + i + " :" + formatRoute(route));
             log.info("Distance: " + distanceRoute);
@@ -150,7 +151,7 @@ public class Depot extends Agent
         int totalWeight = 0;
         for (Parcel p: parcels)
         {
-            if (p.getDestination() == node)
+            if (p.getDestination().id == node.id)
             {
                 totalWeight += p.getWeight();
             }

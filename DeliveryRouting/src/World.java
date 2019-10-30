@@ -43,8 +43,8 @@ public class World extends JPanel
     public World()
     {
         List<AID> truckAIDs = new ArrayList<>();
-        float minWeightLimit = 10;
-        float maxWeightLimit = 20;
+        float minWeightLimit = 40;
+        float maxWeightLimit = 50;
         int numTrucks = 10;
 
         graph = createGraph();

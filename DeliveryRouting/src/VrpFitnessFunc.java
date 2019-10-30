@@ -8,8 +8,9 @@ import java.util.List;
 public class VrpFitnessFunc extends FitnessFunction {
 
     private static final int PENALIZE_INCOMPLETE_DELIVERY = 125;
-    private static final int PENALIZE_INCOMPLETE_TRUCK = 2;
+    private static final int PENALIZE_INCOMPLETE_TRUCK = 5;
     private static final int PENALIZE_DISTANCE = 25;
+    private static final int PENALIZE_EMPTY_TRUCK = 100;
     private final World world;
     private static Depot depot = null;
 
@@ -58,23 +59,28 @@ public class VrpFitnessFunc extends FitnessFunction {
             final Node node = graph.getNodeWithID(pos);
             totalCoveredBySolution += depot.getNodeDemand(node);
         }
-
+        //if (totalCoveredBySolution == 0) System.out.println("truck has no parcels");
         return totalCoveredBySolution;
     }
 
     private static double computeTotalDemand(int vehicleNumber, IChromosome chromosome, World world) {
-        final double totalCoveredBySolution = computeTotalCoveredDemand(vehicleNumber, chromosome, world.getGraph());
+        final double totalCoveredBySolution = computeTotalCoveredDemand(vehicleNumber + 1, chromosome, world.getGraph());
         final double vehicleCapacity = world.getTrucks().get(vehicleNumber).getWeightLimit();
 
+        if (totalCoveredBySolution == 0)
+        {
+            return (vehicleCapacity - totalCoveredBySolution) * PENALIZE_EMPTY_TRUCK;
+        }
         if (totalCoveredBySolution > vehicleCapacity) {//can't complete delivery
             return (totalCoveredBySolution - vehicleCapacity) * PENALIZE_INCOMPLETE_DELIVERY;
         }
-        return (vehicleCapacity - totalCoveredBySolution) * PENALIZE_INCOMPLETE_TRUCK;//unused capacity
+        return 0;
+        //return (vehicleCapacity - totalCoveredBySolution) * PENALIZE_INCOMPLETE_TRUCK;//unused capacity
     }
 
     public static double computeTotalDistance(int vehicleNumber, IChromosome chromosome, NodeGraph graph) {
         double totalDistance = 0.0;
-        final List<Integer> positions = getPositions(vehicleNumber, chromosome, graph, true);
+        final List<Integer> positions = getPositions(vehicleNumber + 1, chromosome, graph, true);
 
         final Node store = graph.getNodeWithID(0);//first node represents the starting point
 
@@ -106,7 +112,7 @@ public class VrpFitnessFunc extends FitnessFunction {
     public static List<Integer> getPositions(final int vehicleNumber, final IChromosome chromosome, final NodeGraph graph, final boolean order) {
         final List<Integer> route = new ArrayList<>();
         final List<Double> positions = new ArrayList<>();
-        final int graphDimension = depot.GetNodesWithParcelsAssigned().size();//graph.adjNodes.size();
+        final int graphDimension = depot.GetNodesWithParcelsAssigned().size();
         for (int i = 1; i < graphDimension; ++i) {
             int chromosomeValue = (Integer) chromosome.getGene(i).getAllele();
             if (chromosomeValue == vehicleNumber) {
