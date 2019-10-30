@@ -46,6 +46,10 @@ public class World extends JPanel
 
         graph = createGraph();
         Node depotNode = graph.getNodeWithID(0);
+        for (Map.Entry<Node, List<Node>> entry : graph.adjNodes.entrySet()) {
+            graph.addEdgesInRange(entry.getKey(), 95);
+        }
+
 
         for (int i = 0; i < numTrucks; i++)
         {
@@ -106,7 +110,6 @@ public class World extends JPanel
         {
             Node node = entry.getKey();
             List<Node> nodeList = entry.getValue();
-            graph.addEdgesInRange(node, 95);
 
             for (Node n : nodeList) {
                 g.drawLine((int) n.position.x, (int) n.position.y, (int) node.position.x, (int) node.position.y);
