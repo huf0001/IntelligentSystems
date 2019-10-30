@@ -3,7 +3,6 @@ import jade.core.ProfileImpl;
 import jade.core.Runtime;
 import jade.wrapper.ContainerController;
 
-import java.awt.*;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -18,6 +17,7 @@ public class Simulation
     private static ContainerController container = null;
     private static BufferedWriter p_stdin;
     private static Process p;
+    private static final float TARGET_FRAME_DURATION = 1000 / 60;
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
@@ -125,8 +125,7 @@ public class Simulation
         Calendar cal = Calendar.getInstance();
         boolean finished = false;
         float timeAtStartOfLoop;
-        float loopDuration;
-        float standardDelay = 1000 / 60;
+        float frameDuration;
 
         frame.add(world);
         frame.setSize(world.getWidth(), world.getHeight());
@@ -143,8 +142,8 @@ public class Simulation
 
             try
             {
-                loopDuration = cal.getTimeInMillis() - timeAtStartOfLoop;
-                TimeUnit.MILLISECONDS.sleep(standardDelay > loopDuration ? (long)(standardDelay - loopDuration) : 0);
+                frameDuration = cal.getTimeInMillis() - timeAtStartOfLoop;
+                TimeUnit.MILLISECONDS.sleep(TARGET_FRAME_DURATION > frameDuration ? (long)(TARGET_FRAME_DURATION - frameDuration) : 0);
             }
             catch(Exception e)
             {
