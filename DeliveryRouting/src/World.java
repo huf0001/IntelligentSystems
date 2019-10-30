@@ -65,7 +65,7 @@ public class World extends JPanel
             }
         }
 
-        depot = new Depot(truckAIDs);
+        depot = new Depot(truckAIDs, this);
         try {
             depot.StartVRP();
         }
@@ -142,6 +142,22 @@ public class World extends JPanel
     private float RandomFloatBetween(float min, float max)
     {
         return random.nextFloat() * (max - min) + min;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder stringBuilder = new StringBuilder();
+        int numNodes = graph.adjNodes.size();
+        int numTrucks = depot.getNumTrucks();
+        int totDemand = depot.getTotalDemand();
+        stringBuilder.append("total number of nodes: ").append(numNodes).append("\n");
+        stringBuilder.append("capacity of vehicles: Randomised between 10-20").append("\n");
+        stringBuilder.append("number of vehicles: ").append(numTrucks).append("\n");
+//        for (int i = 0; i < graph.adjNodes.size(); i++) {
+//            stringBuilder.append("Node ").append(i + 1).append(" ").append(graph.adjNodes.keySet().).append("\n");
+//        }
+        stringBuilder.append("total parcel weight: ").append(totDemand).append("\n");
+        return stringBuilder.toString();
     }
 }
 

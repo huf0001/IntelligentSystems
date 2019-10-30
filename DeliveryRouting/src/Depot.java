@@ -49,20 +49,21 @@ public class Depot extends Agent
     private static final int EVOLUTIONS = 2000;
     private static final int POPULATION_SIZE = 350;
 
-    public Depot(List<AID> trucksAtDepot)
+    public Depot(List<AID> trucksAtDepot, World world)
     {
         this.trucksAtDepot = trucksAtDepot;
         numTrucks = trucksAtDepot.size();
+        this.world = world;
+        GetParcels();
     }
 
     public void StartVRP() throws Exception {
         final Configuration configuration = new DefaultConfiguration();
-        final World world = this.world;
         configuration.setPreservFittestIndividual(true);
         configuration.setFitnessFunction(new VrpFitnessFunc(world, this));
         configuration.setPopulationSize(POPULATION_SIZE);
 
-        log.info("Loaded vrp configuration:\n" + world);
+        log.info("Loaded vrp configuration:\n" + world.toString());
 
         final int graphDimension = world.getGraph().adjNodes.size();
         final Gene[] genes = new Gene[2 * graphDimension];
@@ -117,6 +118,18 @@ public class Depot extends Agent
         }
         log.info("Total distance: " + total);
 
+    }
+
+    public int getTotalDemand()
+    {
+        int totWeight = 0;
+
+        for (Parcel p : parcels)
+        {
+            totWeight += p.getWeight();
+        }
+
+        return totWeight;
     }
 
     public int getNodeDemand(Node node)
