@@ -14,19 +14,44 @@ public class Truck extends Agent
     //Private Fields --------------------------------------------------------------------------------------------------------------------------------
 
     private World world;    //For testing
-    private AID truckDepot;
+    private AID depotAID = null;
     private List<Road> route = new ArrayList<Road>();
     private List<Parcel> parcels = new ArrayList<Parcel>();
     private Node currentDestination;
     private Vector2 position;
     private float weightLimit;
     private float speed = 1f;
+    private boolean requestingRoute;
+    private int routeRequestStep = 0;
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
     public Vector2 getPosition()
     {
         return position;
+    }
+
+    public void setDepotAID(AID value)
+    {
+//        if (value == null)
+//        {
+//            System.out.println(getLocalName() + ": received Depot AID; value received is null");
+//        }
+//        else
+//        {
+//            System.out.println(getLocalName() + ": received Depot AID; value received is valid");
+//        }
+
+        depotAID = value;
+
+//        if (depotAID == null)
+//        {
+//            System.out.println(getLocalName() + ": received Depot AID; set AID is null");
+//        }
+//        else
+//        {
+//            System.out.println(getLocalName() + ": received Depot AID; set AID is valid");
+//        }
     }
 
     //Constructor------------------------------------------------------------------------------------------------------------------------------------
@@ -44,7 +69,7 @@ public class Truck extends Agent
     protected void setup()
     {
         CreateCyclicBehaviourListening();
-        CreateBehaviourRequestRoute();
+        CreateCyclicBehaviourRequestRoute();
     }
 
     private void CreateCyclicBehaviourListening()
@@ -53,6 +78,7 @@ public class Truck extends Agent
         {
             public void action()
             {
+                System.out.println(getLocalName() + ": listening");
                 CheckForConstraintRequest();
                 CheckForParcelAllocation();
             }
@@ -140,21 +166,27 @@ public class Truck extends Agent
         }
     }
 
-    private void CreateBehaviourRequestRoute()
+    private void CreateCyclicBehaviourRequestRoute()
     {
-        Behaviour behaviourRequestRoute = new Behaviour(this)
+        CyclicBehaviour cyclicBehaviourRequestRoute = new CyclicBehaviour(this)
         {
-            private int step;
+            //private int step;
             private MessageTemplate mt;
 
             public void action()
             {
-                switch (step) {
+                System.out.println(getLocalName() + ".BehaviourRequestRoute");
+                switch (routeRequestStep) {
                     case 0:
+                        block();
+                        break;
+                    case 1:
                         ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
 
+                        System.out.println(getLocalName() + ": sending route request to agent " + depotAID.getLocalName());
+
                         // Setup request values
-                        request.addReceiver(truckDepot);
+                        request.addReceiver(depotAID);
                         request.setContent("Route");
                         request.setConversationId("Route_Request");
                         request.setReplyWith("request" + System.currentTimeMillis()); // Unique ID
@@ -166,9 +198,9 @@ public class Truck extends Agent
                         mt = MessageTemplate.and(MessageTemplate.MatchConversationId("Route_Request"),
                                 MessageTemplate.MatchInReplyTo(request.getReplyWith()));
 
-                        step++;
+                        routeRequestStep++;
                         break;
-                    case 1:
+                    case 2:
                         // Wait for replies and store their content
                         ACLMessage reply = receive(mt);
                         boolean received = false;
@@ -205,7 +237,8 @@ public class Truck extends Agent
                             //Send confirmation
                             send(confirmation);
 
-                            step++;
+                            routeRequestStep = 0;
+                            requestingRoute = false;
                         }
                         else
                         {
@@ -216,13 +249,14 @@ public class Truck extends Agent
                 }
             }
 
-            public boolean done()
-            {
-                return step == 2;
-            }
+//            public boolean done()
+//            {
+//                return routeRequestStep == 3;
+//            }
         };
 
-        addBehaviour(behaviourRequestRoute);
+        addBehaviour(cyclicBehaviourRequestRoute);
+        System.out.println(getLocalName() + ": route request behaviour added");
     }
 
     public void GoToNextNode ()
@@ -234,21 +268,31 @@ public class Truck extends Agent
         toCurrentNode = toCurrentNode.multiply(speed < distance ? speed : distance);
         position = position.add(toCurrentNode);
 
-        if (Vector2.distance(position, currentDestination.position) == 0)
+        if (depotAID == null)
+        {
+            System.out.println(getLocalName() + ": depotAID is null");
+        }
+
+        if (Vector2.distance(position, currentDestination.position) == 0 && !requestingRoute && depotAID != null)
         {
             DeliverParcels();
 
             if (route.size() == 0)
             {
-                currentDestination = world.getRandomNode();//For testing
-                System.out.println(getLocalName() + ": New destination: Node " + currentDestination.id);
+                //route.add(world.getRandomRoad(currentDestination));//For testing
 
-                //TODO: If haven't asked for new route, ask for new route
+                //TODO: request new route
+                requestingRoute = true;
+                routeRequestStep = 1;
+                //CreateCyclicBehaviourRequestRoute();
+                System.out.println(getLocalName() + ": requesting route");
             }
             else
             {
                 currentDestination = route.get(0).getDestination();
                 route.remove(0);
+
+                System.out.println(getLocalName() + ": New destination: Node " + currentDestination.id);
             }
         }
     }

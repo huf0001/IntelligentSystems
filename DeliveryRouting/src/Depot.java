@@ -22,6 +22,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,9 +38,11 @@ public class Depot extends Agent
     private List<Node> unroutedNodes;
     private List<Node> routedNodes;
 
-    public Depot(List<AID> trucksAtDepot)
+    public Depot(World world, List<AID> trucksAtDepot)
     {
+        this.world = world;
         this.trucksAtDepot = trucksAtDepot;
+
     }
 
     private BoolVar[] getColumn(BoolVar[][] array, int index){
@@ -50,15 +53,14 @@ public class Depot extends Agent
         return column;
     }
 
-    protected void setup(List<AID> trucks){
-        trucksAtDepot = trucks;
-
-        //GetParcels();
-        //CreateBehaviourRequestConstraints
+    protected void setup()
+    {
+        System.out.println("Depot: setup");
+        //GetParcels();         //Threw an error
+        CreateBehaviourRequestConstraints();
         //AssignParcels();  //Matches up trucks with parcels
         //CreateRoutes();
         //CreateBehaviourAllocateParcels();     //Sends assigned parcels to the truck via messages
-        //CreateBehaviourRequestConstraints();
 
         CreateCyclicBehaviourCheckForRouteRequests();
     }
@@ -290,14 +292,19 @@ public class Depot extends Agent
 
     private void CreateCyclicBehaviourCheckForRouteRequests()
     {
-        CyclicBehaviour cyclicBehaviourCheckForRouteRequests = new CyclicBehaviour(this) {
-            public void action() {
+        CyclicBehaviour cyclicBehaviourCheckForRouteRequests = new CyclicBehaviour(this)
+        {
+            public void action()
+            {
+                System.out.println(getLocalName() + ": checking for route requests");
                 // Match a request for a route
                 MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
                         MessageTemplate.MatchConversationId("Route_Request"));
                 ACLMessage request = receive(mt);
 
-                if (request != null) {
+                if (request != null)
+                {
+                    System.out.println(getLocalName() + ": found route request");
                     ACLMessage reply = request.createReply();
                     reply.setPerformative(ACLMessage.INFORM);
                     reply.setConversationId(request.getConversationId());
@@ -305,7 +312,10 @@ public class Depot extends Agent
                     // Send the route according to the AID of the truck
                     try
                     {
-                        reply.setContentObject((Serializable) routes.get(request.getSender()));
+                        //reply.setContentObject((Serializable) routes.get(request.getSender()));
+                        List<Road> route = new ArrayList<Road>();
+                        route.add(world.getRandomRoad());
+                        reply.setContentObject((Serializable)route);
                     }
                     catch (IOException e)
                     {
@@ -313,12 +323,17 @@ public class Depot extends Agent
                     }
 
                     send(reply);
-                } else {
+                }
+                else
+                {
+                    System.out.println(getLocalName() + ": no route requests");
                     block();
                 }
             }
         };
+
         addBehaviour(cyclicBehaviourCheckForRouteRequests);
+        System.out.println("Depot: created check for route requests behaviour");
     }
 
     //Not used; currently obsolesced by CreateCyclicBehaviourCheckForRouteRequests()

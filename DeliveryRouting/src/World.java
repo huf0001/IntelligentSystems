@@ -12,6 +12,8 @@ public class World extends JPanel
 {
     //Private Fields---------------------------------------------------------------------------------------------------------------------------------
 
+    private static World instance = null;
+
     private Random random = new Random();
 
     private JFrame frame;
@@ -31,6 +33,12 @@ public class World extends JPanel
     {
         ArrayList<Node> nodes = new ArrayList<Node>(graph.adjNodes.keySet());
         return nodes.get((int)RandomFloatBetween(0, nodes.size() - 1));
+    }
+
+    public Road getRandomRoad()
+    {
+        ArrayList<Node> nodes = new ArrayList<Node>(graph.adjNodes.keySet());
+        return new Road(nodes.get(0), nodes.get((int)RandomFloatBetween(0, nodes.size() - 1)));
     }
 
     public int getWidth() { return width; }
@@ -54,21 +62,40 @@ public class World extends JPanel
         for (int i = 0; i < numTrucks; i++)
         {
             Truck truck = new Truck(this, depotNode, RandomFloatBetween(minWeightLimit, maxWeightLimit));
-            trucks.add(truck);
-            truckAIDs.add(trucks.get(i).getAID());
 
             //Start the trucks on the container
-            try {
-                AgentController ag = Simulation.getContainerController().acceptNewAgent("Truck" + i, truck);
-                ag.start();
-            } catch (StaleProxyException e) {
+            try
+            {
+                Simulation.getContainerController().acceptNewAgent("Truck" + i, truck);
+            }
+            catch (StaleProxyException e)
+            {
                 e.printStackTrace();
             }
+
+            trucks.add(truck);
+            System.out.println(trucks.get(i).getLocalName() + ": created truck with AID " + trucks.get(i).getAID().getLocalName());
+            truckAIDs.add(trucks.get(i).getAID());
         }
 
+        depot = new Depot(this, truckAIDs);
 
+        try
+        {
+            AgentController ag = Simulation.getContainerController().acceptNewAgent("Depot", depot);
 
-        depot = new Depot(truckAIDs);
+            for(Truck t : trucks)
+            {
+                t.setDepotAID(depot.getAID());
+            }
+
+            ag.start();
+            System.out.println("Depot added to container");
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
     private NodeGraph createGraph()
