@@ -287,8 +287,16 @@ public class Truck extends Agent
 //                        {
 //                            route.add(r);
 //                        }
+                        String replyString = reply.getContent();
+                        String[] nodeIDs = replyString.split(":");
+                        Node previousNode = currentDestination;
 
-                        route = (List<Road>)reply.getContentObject();
+                        for (int i = 0, j = nodeIDs.length; i < j; i++)
+                        {
+                            Node n = world.getNodeByID(Integer.parseInt(nodeIDs[i]));
+                            route.add(new Road(previousNode, n));
+                            previousNode = n;
+                        }
 
                         received = true;
 

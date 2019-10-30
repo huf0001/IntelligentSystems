@@ -11,6 +11,11 @@ public class Node
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
+    public int getId()
+    {
+        return id;
+    }
+
     //Constructor(s)---------------------------------------------------------------------------------------------------------------------------------
 
     Node(int value)     //If this one is to be acceptable, needs a public property setPosition(), but I don't know why you wouldn't just use the other constructor that takes the position

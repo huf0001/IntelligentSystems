@@ -316,7 +316,21 @@ public class Depot extends Agent
                         List<Road> route = new ArrayList<>();
                         route.add(world.getRandomRoad());
                         //Object routeObject = (Object)route;
-                        reply.setContentObject((Serializable)route);
+
+                        String nodeIDs = "";
+
+                        for (int i = 0; i < route.size(); i++)
+                        {
+                            if (i > 0)
+                            {
+                                nodeIDs += ":";
+                            }
+
+                            nodeIDs += route.get(i).getDestination().getId();
+                        }
+
+                        //reply.setContentObject((Serializable)route);
+                        reply.setContent(nodeIDs);
                     }
                     catch (Exception e)
                     {
