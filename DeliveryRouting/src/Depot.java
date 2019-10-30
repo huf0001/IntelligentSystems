@@ -42,7 +42,7 @@ public class Depot extends Agent
     private Map<AID, List<Road>> routes = new HashMap<AID, List<Road>>();
     private Map<AID, List<Parcel>> truckParcels = new HashMap<AID, List<Parcel>>();
     private List<Node> unroutedNodes;
-    private List<Node> routedNodes;
+    private List<Node> nodesWithParcelsAssigned = new ArrayList<>();
     private int numTrucks;
 
     private static Logger log = LoggerFactory.getLogger(Depot.class);
@@ -55,6 +55,12 @@ public class Depot extends Agent
         numTrucks = trucksAtDepot.size();
         this.world = world;
         GetParcels();
+        for (Parcel p : parcels)
+        {
+            Node randNode = world.getRandomNode();
+            p.setDestination(randNode);
+            nodesWithParcelsAssigned.add(randNode);
+        }
     }
 
     public void StartVRP() throws Exception {
@@ -65,11 +71,11 @@ public class Depot extends Agent
 
         log.info("Loaded vrp configuration:\n" + world.toString());
 
-        final int graphDimension = world.getGraph().adjNodes.size();
+        final int graphDimension = nodesWithParcelsAssigned.size();forkfork
         final Gene[] genes = new Gene[2 * graphDimension];
         for (int i = 0; i < graphDimension; i++) {
             genes[i] = new IntegerGene(configuration, 1, numTrucks);
-            genes[i + graphDimension] = new DoubleGene(configuration, 0, 45);//to keep order of nodes
+            genes[i + graphDimension] = new DoubleGene(configuration, 0, graphDimension);//to keep order of nodes
         }
 
         configuration.setSampleChromosome(new Chromosome(configuration, genes));
@@ -130,6 +136,11 @@ public class Depot extends Agent
         }
 
         return totWeight;
+    }
+
+    public List<Node> GetNodesWithParcelsAssigned()
+    {
+        return nodesWithParcelsAssigned;
     }
 
     public int getNodeDemand(Node node)

@@ -106,7 +106,7 @@ public class VrpFitnessFunc extends FitnessFunction {
     public static List<Integer> getPositions(final int vehicleNumber, final IChromosome chromosome, final NodeGraph graph, final boolean order) {
         final List<Integer> route = new ArrayList<>();
         final List<Double> positions = new ArrayList<>();
-        final int graphDimension = graph.adjNodes.size();
+        final int graphDimension = depot.GetNodesWithParcelsAssigned().size();//graph.adjNodes.size();
         for (int i = 1; i < graphDimension; ++i) {
             int chromosomeValue = (Integer) chromosome.getGene(i).getAllele();
             if (chromosomeValue == vehicleNumber) {
