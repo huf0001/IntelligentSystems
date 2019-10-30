@@ -49,6 +49,10 @@ public class World extends JPanel
 
         graph = createGraph();
         Node depotNode = graph.getNodeWithID(0);
+        for (Map.Entry<Node, List<Node>> entry : graph.adjNodes.entrySet()) {
+            graph.addEdgesInRange(entry.getKey(), 95);
+        }
+
 
         for (int i = 0; i < numTrucks; i++)
         {
@@ -58,7 +62,7 @@ public class World extends JPanel
 
             //Start the trucks on the container
             try {
-                AgentController ag = Simulation.getContainer().acceptNewAgent("Truck" + i, truck);
+                AgentController ag = Simulation.getContainerController().acceptNewAgent("Truck" + i, truck);
                 ag.start();
             } catch (StaleProxyException e) {
                 e.printStackTrace();
@@ -113,7 +117,6 @@ public class World extends JPanel
         {
             Node node = entry.getKey();
             List<Node> nodeList = entry.getValue();
-            graph.addEdgesInRange(node, 95);
 
             for (Node n : nodeList) {
                 g.drawLine((int) n.position.x, (int) n.position.y, (int) node.position.x, (int) node.position.y);

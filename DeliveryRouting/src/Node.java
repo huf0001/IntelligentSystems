@@ -3,17 +3,6 @@ import java.util.List;
 
 public class Node
 {
-    //Never used and we have Vector2s??
-//    static class WorldPoint{
-//        int x;
-//        int y;
-//
-//        WorldPoint(int x, int y) {
-//            this.x = x;
-//            this.y = y;
-//        }
-//    }
-
     //Private Fields---------------------------------------------------------------------------------------------------------------------------------
 
     private List<Parcel> parcels = new ArrayList<Parcel>();

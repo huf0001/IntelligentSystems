@@ -3,7 +3,6 @@ import jade.core.ProfileImpl;
 import jade.core.Runtime;
 import jade.wrapper.ContainerController;
 
-import java.awt.*;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -15,15 +14,16 @@ public class Simulation
 {
     //Private Fields---------------------------------------------------------------------------------------------------------------------------------
 
-    private static ContainerController container = null;
-    private static BufferedWriter p_stdin;
-    private static Process p;
+    private static ContainerController containerController = null;
+    private static BufferedWriter bufferedWriter;
+    private static Process process;
+    private static final float TARGET_FRAME_DURATION = 1000 / 60;
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
-    public static ContainerController getContainer()
+    public static ContainerController getContainerController()
     {
-        return container;
+        return containerController;
     }
 
     //Constructor------------------------------------------------------------------------------------------------------------------------------------
@@ -48,7 +48,7 @@ public class Simulation
         }
 
         //get stdin of shell
-         p_stdin = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
+         bufferedWriter = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
     }
 
     private static void StartJADE()
@@ -56,9 +56,9 @@ public class Simulation
         try
         {
             //single execution
-            p_stdin.write("java -cp lib\\jade.jar jade.Boot -gui");
-            p_stdin.newLine();
-            p_stdin.flush();
+            bufferedWriter.write("java -cp lib\\jade.jar jade.Boot -gui");
+            bufferedWriter.newLine();
+            bufferedWriter.flush();
         }
         catch (IOException e)
         {
@@ -68,6 +68,16 @@ public class Simulation
 
     private static ContainerController GetJADEContainer()
     {
+        try
+        {
+            //Delay to give JADE enough time to boot up properly
+            TimeUnit.MILLISECONDS.sleep(3000);
+        }
+            catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+
         //Get the JADE runtime interface (singleton)
         Runtime runtime = Runtime.instance();
 
@@ -84,9 +94,9 @@ public class Simulation
     {
         // finally close the shell by execution exit command
         try {
-            p_stdin.write("exit");
-            p_stdin.newLine();
-            p_stdin.flush();
+            bufferedWriter.write("exit");
+            bufferedWriter.newLine();
+            bufferedWriter.flush();
         }
         catch (IOException e)
         {
@@ -94,7 +104,7 @@ public class Simulation
         }
 
         // write stdout of shell (=output of all commands)
-        Scanner s = new Scanner( p.getInputStream() );
+        Scanner s = new Scanner( process.getInputStream() );
 
         while (s.hasNext())
         {
@@ -108,15 +118,14 @@ public class Simulation
         //Start JADE
         OpenCMDShell();
         StartJADE();
-        container = GetJADEContainer();
+        containerController = GetJADEContainer();
 
         JFrame frame = new JFrame("Delivery Routing");
         World world = new World();
         Calendar cal = Calendar.getInstance();
         boolean finished = false;
         float timeAtStartOfLoop;
-        float loopDuration;
-        float standardDelay = 1000 / 60;
+        float frameDuration;
 
         frame.add(world);
         frame.setSize(world.getWidth(), world.getHeight());
@@ -133,8 +142,8 @@ public class Simulation
 
             try
             {
-                loopDuration = cal.getTimeInMillis() - timeAtStartOfLoop;
-                TimeUnit.MILLISECONDS.sleep(standardDelay > loopDuration ? (long)(standardDelay - loopDuration) : 0);
+                frameDuration = cal.getTimeInMillis() - timeAtStartOfLoop;
+                TimeUnit.MILLISECONDS.sleep(TARGET_FRAME_DURATION > frameDuration ? (long)(TARGET_FRAME_DURATION - frameDuration) : 0);
             }
             catch(Exception e)
             {
