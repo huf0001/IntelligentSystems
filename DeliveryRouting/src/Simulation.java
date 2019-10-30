@@ -68,6 +68,16 @@ public class Simulation
 
     private static ContainerController GetJADEContainer()
     {
+        try
+        {
+            //Delay to give JADE enough time to boot up properly
+            TimeUnit.MILLISECONDS.sleep(3000);
+        }
+            catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+
         //Get the JADE runtime interface (singleton)
         Runtime runtime = Runtime.instance();
 
