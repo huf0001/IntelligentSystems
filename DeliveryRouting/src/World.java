@@ -1,5 +1,7 @@
 import jade.core.AID;
+import jade.core.Agent;
 import jade.wrapper.AgentController;
+import jade.wrapper.ControllerException;
 import jade.wrapper.StaleProxyException;
 
 import javax.swing.JFrame;
@@ -45,19 +47,20 @@ public class World extends JPanel
 
     //Setup Methods----------------------------------------------------------------------------------------------------------------------------------
 
-    public World()
-    {
+    public World() throws ControllerException {
         List<AID> truckAIDs = new ArrayList<>();
         float minWeightLimit = 10;
         float maxWeightLimit = 20;
         int numTrucks = 10;
+        List<AgentController> agentControllers = new ArrayList<AgentController>();
 
         graph = createGraph();
         Node depotNode = graph.getNodeWithID(0);
-        for (Map.Entry<Node, List<Node>> entry : graph.adjNodes.entrySet()) {
+
+        for (Map.Entry<Node, List<Node>> entry : graph.adjNodes.entrySet())
+        {
             graph.addEdgesInRange(entry.getKey(), 95);
         }
-
 
         for (int i = 0; i < numTrucks; i++)
         {
@@ -66,7 +69,13 @@ public class World extends JPanel
             //Start the trucks on the container
             try
             {
-                Simulation.getContainerController().acceptNewAgent("Truck" + i, truck);
+                agentControllers.add(Simulation.getContainerController().acceptNewAgent("Truck" + i, truck));
+                Object var = Simulation.getContainerController().getAgent("Truck"+i);
+
+                if (var != null)
+                {
+                    System.out.println(truck.getLocalName() + ": successfully added to container");
+                }
             }
             catch (StaleProxyException e)
             {
@@ -74,7 +83,6 @@ public class World extends JPanel
             }
 
             trucks.add(truck);
-            System.out.println(trucks.get(i).getLocalName() + ": created truck with AID " + trucks.get(i).getAID().getLocalName());
             truckAIDs.add(trucks.get(i).getAID());
         }
 
@@ -82,15 +90,24 @@ public class World extends JPanel
 
         try
         {
-            AgentController ag = Simulation.getContainerController().acceptNewAgent("Depot", depot);
+            AgentController agentController = Simulation.getContainerController().acceptNewAgent("Depot", depot);
+            Object var = Simulation.getContainerController().getAgent("Depot");
 
-            for(Truck t : trucks)
+            if (var != null)
             {
-                t.setDepotAID(depot.getAID());
-            }
+                System.out.println(depot.getLocalName() + ": successfully added to container");
+                agentController.start();
 
-            ag.start();
-            System.out.println("Depot added to container");
+                for(Truck t : trucks)
+                {
+                    t.setDepotAID(depot.getAID());
+                }
+
+                for (AgentController ac : agentControllers)
+                {
+                    ac.start();
+                }
+            }
         }
         catch (Exception e)
         {
@@ -117,13 +134,13 @@ public class World extends JPanel
 
     //Recurring Methods------------------------------------------------------------------------------------------------------------------------------
 
-    public void updateTrucks()
-    {
-        for (Truck truck : trucks)
-        {
-            //truck.GoToNextNode();   //For testing
-        }
-    }
+//    public void updateTrucks()
+//    {
+//        for (Truck truck : trucks)
+//        {
+//            //truck.GoToNextNode();   //For testing
+//        }
+//    }
 
     public void paint(Graphics g)
     {

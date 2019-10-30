@@ -42,7 +42,6 @@ public class Depot extends Agent
     {
         this.world = world;
         this.trucksAtDepot = trucksAtDepot;
-
     }
 
     private BoolVar[] getColumn(BoolVar[][] array, int index){
@@ -313,11 +312,13 @@ public class Depot extends Agent
                     try
                     {
                         //reply.setContentObject((Serializable) routes.get(request.getSender()));
-                        List<Road> route = new ArrayList<Road>();
+                        //Road[] route = new Road[] {world.getRandomRoad()};
+                        List<Road> route = new ArrayList<>();
                         route.add(world.getRandomRoad());
+                        //Object routeObject = (Object)route;
                         reply.setContentObject((Serializable)route);
                     }
-                    catch (IOException e)
+                    catch (Exception e)
                     {
                         e.printStackTrace();
                     }

@@ -121,7 +121,17 @@ public class Simulation
         containerController = GetJADEContainer();
 
         JFrame frame = new JFrame("Delivery Routing");
-        World world = new World();
+        World world = null;
+
+        try
+        {
+            world = new World();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
         Calendar cal = Calendar.getInstance();
         boolean finished = false;
         float timeAtStartOfLoop;
@@ -137,7 +147,7 @@ public class Simulation
         while (!finished)
         {
             timeAtStartOfLoop = cal.getTimeInMillis();
-            world.updateTrucks();
+            //world.updateTrucks();
             world.repaint();
 
             try
