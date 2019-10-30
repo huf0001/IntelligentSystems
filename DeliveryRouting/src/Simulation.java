@@ -6,6 +6,7 @@ import jade.wrapper.ContainerController;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.sql.Time;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import javax.swing.*;
@@ -17,6 +18,7 @@ public class Simulation
     private static ContainerController containerController = null;
     private static BufferedWriter bufferedWriter;
     private static Process process;
+    private static Calendar cal = null;
     private static final float TARGET_FRAME_DURATION = 1000 / 60;
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
@@ -122,6 +124,10 @@ public class Simulation
 
         JFrame frame = new JFrame("Delivery Routing");
         World world = null;
+        cal = Calendar.getInstance();
+        boolean finished = false;
+        float timeAtStartOfLoop;
+        float frameDuration;
 
         try
         {
@@ -131,11 +137,6 @@ public class Simulation
         {
             e.printStackTrace();
         }
-
-        Calendar cal = Calendar.getInstance();
-        boolean finished = false;
-        float timeAtStartOfLoop;
-        float frameDuration;
 
         frame.add(world);
         frame.setSize(world.getWidth(), world.getHeight());
@@ -147,7 +148,6 @@ public class Simulation
         while (!finished)
         {
             timeAtStartOfLoop = cal.getTimeInMillis();
-            //world.updateTrucks();
             world.repaint();
 
             try

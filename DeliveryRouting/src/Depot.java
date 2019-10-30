@@ -18,8 +18,10 @@ import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.tools.ArrayUtils;
 
+import javax.swing.*;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -44,6 +46,19 @@ public class Depot extends Agent
         this.trucksAtDepot = trucksAtDepot;
     }
 
+    public Parcel getParcelByID(int id)
+    {
+        for (Parcel p : parcels)
+        {
+            if (p.getID() == id)
+            {
+                return p;
+            }
+        }
+
+        return null;
+    }
+
     private BoolVar[] getColumn(BoolVar[][] array, int index){
         BoolVar[] column = new BoolVar[array[0].length]; // Here I assume a rectangular 2D array!
         for(int i = 0; i < column.length; i++){
@@ -59,7 +74,7 @@ public class Depot extends Agent
         CreateBehaviourRequestConstraints();
         //AssignParcels();  //Matches up trucks with parcels
         //CreateRoutes();
-        //CreateBehaviourAllocateParcels();     //Sends assigned parcels to the truck via messages
+        CreateBehaviourAllocateParcels();     //Sends assigned parcels to the truck via messages
 
         CreateCyclicBehaviourCheckForRouteRequests();
     }
@@ -225,20 +240,48 @@ public class Depot extends Agent
             public void action() {
                 switch (step) {
                     case 0:
+                        System.out.println("Parcel allocation, step 1");
                         // Give to all trucks at depot
                         for (AID truck : trucksAtDepot)
                         {
                             ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
 
                             // Setup inform values
-                            try
-                            {
-                                inform.setContentObject((java.io.Serializable) truckParcels.get(truck));
-                            }
-                            catch (IOException e)
-                            {
-                                e.printStackTrace();
-                            }
+//                            try
+//                            {
+                                //Serialize as strings
+                                String parcelIDs = "";
+                                parcels[0] = new Parcel(0, 0);
+
+                                for (int i = 0; i < parcels.length; i++)
+                                {
+                                    if (parcels[i] != null)
+                                    {
+                                        if (i > 0)
+                                        {
+                                            parcelIDs += ":";
+                                        }
+
+                                        parcelIDs += parcels[i].getID();
+                                    }
+                                }
+
+                                inform.setContent(parcelIDs);
+
+//                                //Won't accept parcels
+//                                if (truckParcels.get(truck) == null || truckParcels.get(truck).size() == 0)
+//                                {
+//                                    List<Parcel> parcels = new ArrayList<Parcel>();
+//                                    parcels.add(new Parcel(0, 10));
+//                                    truckParcels.put(truck, parcels);
+//                                }
+//
+//                                inform.setContentObject((java.io.Serializable) truckParcels.get(truck));
+//                            }
+//                            catch (IOException e)
+//                            {
+//                                e.printStackTrace();
+//                            }
 
                             inform.setConversationId("Parcel_Allocation");
                             inform.setReplyWith("inform" + System.currentTimeMillis()); // Unique ID
@@ -256,7 +299,7 @@ public class Depot extends Agent
                         step = 1;
                         break;
                     case 1:
-
+                        System.out.println("Parcel allocation, step 2");
                         ACLMessage reply = receive(mt);
                         // Wait for replies and store their content
                         if (reply != null) {
@@ -311,13 +354,10 @@ public class Depot extends Agent
                     // Send the route according to the AID of the truck
                     try
                     {
-                        //reply.setContentObject((Serializable) routes.get(request.getSender()));
-                        //Road[] route = new Road[] {world.getRandomRoad()};
+                        //Serialize as string
+                        String nodeIDs = "";
                         List<Road> route = new ArrayList<>();
                         route.add(world.getRandomRoad());
-                        //Object routeObject = (Object)route;
-
-                        String nodeIDs = "";
 
                         for (int i = 0; i < route.size(); i++)
                         {
@@ -329,8 +369,17 @@ public class Depot extends Agent
                             nodeIDs += route.get(i).getDestination().getId();
                         }
 
-                        //reply.setContentObject((Serializable)route);
                         reply.setContent(nodeIDs);
+
+//                        //Won't accept roads
+//                        if (routes.get(request.getSender()) == null || routes.get(request.getSender()).size() == 0)
+//                        {
+//                            List<Road> route = new ArrayList<Road>();
+//                            route.add(world.getRandomRoad());
+//                            routes.put(request.getSender(), route);
+//                        }
+//
+//                        reply.setContentObject((java.io.Serializable)routes.get(request.getSender()));
                     }
                     catch (Exception e)
                     {

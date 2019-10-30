@@ -3,7 +3,6 @@ import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.lang.acl.UnreadableException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,14 +11,17 @@ public class Truck extends Agent
 {
     //Private Fields --------------------------------------------------------------------------------------------------------------------------------
 
-    private World world;    //For testing
+    private World world;
     private AID depotAID = null;
     private List<Road> route = new ArrayList<Road>();
     private List<Parcel> parcels = new ArrayList<Parcel>();
     private Node currentDestination;
     private Vector2 position;
     private float weightLimit;
-    private float speed = 0.1f;
+    private float speed = 5f;
+
+    private int step = 0;
+    private MessageTemplate mt;
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
@@ -66,23 +68,48 @@ public class Truck extends Agent
     protected void setup()
     {
         System.out.println(getLocalName() + ": setup");
-        CreateCyclicBehaviourListening();
         CreateCyclicBehaviourUpdate();
     }
 
-    private void CreateCyclicBehaviourListening()
+    private void CreateCyclicBehaviourUpdate()
     {
-        CyclicBehaviour cyclicBehaviourListening = new CyclicBehaviour(this)
+        CyclicBehaviour cyclicBehaviourUpdate = new CyclicBehaviour(this)
         {
+            int count = 0;
+
             public void action()
             {
-                System.out.println(getLocalName() + ": listening");
-                CheckForConstraintRequest();
-                CheckForParcelAllocation();
+                count++;
+
+                if (count > 5000) //Slow down agent execution / reduce the number of times they scream "I'm doing something!!!!" every second
+                {
+                    count -= 5000;
+                    System.out.println(getLocalName() + ".Update().CheckForConstraintRequest()");
+                    CheckForConstraintRequest();
+                    System.out.println(getLocalName() + ".Update().CheckForParcelAllocation()");
+                    CheckForParcelAllocation();
+
+                    switch (step)
+                    {
+                        case 0:
+                            System.out.println(getLocalName() + ".Update().Move()");
+                            Move();
+                            break;
+                        case 1:
+                            System.out.println(getLocalName() + ".Update().SendRouteRequest()");
+                            SendRouteRequest();
+                            break;
+                        case 2:
+                            System.out.println(getLocalName() + ".Update().ReceiveRouteReply()");
+                            ReceiveRouteReply();
+                            break;
+                    }
+                }
             }
         };
 
-        addBehaviour(cyclicBehaviourListening);
+        addBehaviour(cyclicBehaviourUpdate);
+        System.out.println(getLocalName() + ": update behaviour added");
     }
 
     private void CheckForConstraintRequest()
@@ -135,15 +162,41 @@ public class Truck extends Agent
 
         if (msg != null)
         {
-            try
+            //String serialization
+            List<Parcel> newParcels = new ArrayList<Parcel>();
+            String msgContent = msg.getContent();
+            String[] parcelIDs = msgContent.split(":");
+
+            for (String id : parcelIDs)
             {
-                parcels = (List<Parcel>) msg.getContentObject();
-                received = true;
+                newParcels.add(world.getDepot().getParcelByID(Integer.parseInt(id)));
             }
-            catch (UnreadableException e)
-            {
-                e.printStackTrace();
-            }
+
+            parcels.addAll(newParcels);
+            received = true;
+            System.out.println(getLocalName() + ": received " + newParcels.size() + " parcels. Now have " + parcels.size() + " parcels");
+
+
+//            //Wouldn't accept lists of parcels
+//            try
+//            {
+//                List<Parcel> newParcels = (List<Parcel>) msg.getContentObject();
+//                received = true;
+//
+//                if (newParcels == null)
+//                {
+//                    System.out.println(getLocalName() + ": received list of parcels that was null");
+//                }
+//                else
+//                {
+//                    parcels.addAll(newParcels);
+//                    System.out.println(getLocalName() + ": received " + newParcels.size() + " parcels. Now have " + parcels.size() + " parcels");
+//                }
+//            }
+//            catch (UnreadableException e)
+//            {
+//                e.printStackTrace();
+//            }
 
             //Create reply
             ACLMessage reply = msg.createReply();
@@ -164,177 +217,150 @@ public class Truck extends Agent
         }
     }
 
-    private void CreateCyclicBehaviourUpdate()
+    private void Move()
     {
-        CyclicBehaviour cyclicBehaviourUpdate = new CyclicBehaviour(this)
+        double distance = Vector2.distance(position, currentDestination.position);
+        Vector2 toCurrentNode = currentDestination.position.minus(position);
+
+        toCurrentNode.normalize();
+        toCurrentNode = toCurrentNode.multiply(speed < distance ? speed : distance);
+        position = position.add(toCurrentNode);
+
+        if (Vector2.distance(position, currentDestination.position) == 0 && depotAID != null)
         {
-            private int step = 0;
-            private MessageTemplate mt;
+            DeliverParcels();
 
-            public void action()
+            if (route.size() == 0)
             {
-                switch (step)
-                {
-                    case 0:
-                        System.out.println(getLocalName() + ".Update().Move()");
-                        Move();
-                        break;
-                    case 1:
-                        System.out.println(getLocalName() + ".Update().SendRouteRequest()");
-                        SendRouteRequest();
-                        break;
-                    case 2:
-                        System.out.println(getLocalName() + ".Update().ReceiveRouteReply()");
-                        ReceiveRouteReply();
-                        break;
-                }
-            }
+                //route.add(world.getRandomRoad(currentDestination));//For testing
 
-            private void Move()
-            {
-                double distance = Vector2.distance(position, currentDestination.position);
-                Vector2 toCurrentNode = currentDestination.position.minus(position);
-
-                toCurrentNode.normalize();
-                toCurrentNode = toCurrentNode.multiply(speed < distance ? speed : distance);
-                position = position.add(toCurrentNode);
-
-                if (Vector2.distance(position, currentDestination.position) == 0 && depotAID != null)
-                {
-                    DeliverParcels();
-
-                    if (route.size() == 0)
-                    {
-                        //route.add(world.getRandomRoad(currentDestination));//For testing
-
-                        //TODO: request new route
-                        step++;
-                        System.out.println(getLocalName() + ": requesting route; setting requestingRoute to true");
-                    }
-                    else
-                    {
-                        currentDestination = route.get(0).getDestination();
-                        route.remove(0);
-
-                        System.out.println(getLocalName() + ": New destination: Node " + currentDestination.id);
-                    }
-                }
-                else if (depotAID != null)
-                {
-                    System.out.println(getLocalName() + ".Move(): waiting for route request to be resolved");
-                }
-                else
-                {
-                    System.out.println(getLocalName() + ".Move(): waiting for depotAID");
-                }
-            }
-
-            private void DeliverParcels()
-            {
-                List<Parcel> delivery = new ArrayList<Parcel>();
-
-                for (Parcel p : parcels)
-                {
-                    if (p.getDestination() == currentDestination)
-                    {
-                        delivery.add(p);
-                    }
-                }
-
-                parcels.removeAll(delivery);
-                currentDestination.DeliverParcels(delivery);
-                System.out.println(getLocalName() + ": " + parcels.size() + " parcels delivered to Node " + currentDestination.id);
-            }
-
-            private void SendRouteRequest()
-            {
-                ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
-
-                System.out.println(getLocalName() + ": sending route request to agent " + depotAID.getLocalName());
-
-                // Setup request values
-
-                request.addReceiver(depotAID);
-                request.setContent("Route");
-                request.setConversationId("Route_Request");
-                request.setReplyWith("request" + System.currentTimeMillis()); // Unique ID
-
-                // Send request
-                send(request);
-
-                // Setup template to receive responses
-                mt = MessageTemplate.and(MessageTemplate.MatchConversationId("Route_Request"),
-                        MessageTemplate.MatchInReplyTo(request.getReplyWith()));
-
+                //TODO: request new route
                 step++;
+                System.out.println(getLocalName() + ": requesting route; setting requestingRoute to true");
             }
-
-            private void ReceiveRouteReply()
+            else
             {
-                // Wait for replies and store their content
-                ACLMessage reply = receive(mt);
-                boolean received = false;
+                currentDestination = route.get(0).getDestination();
+                route.remove(0);
 
-                if (reply != null)
-                {
-                    try
-                    {
-                        //Store route
-//                        Object routeObject = (Object)reply.getContentObject();
-//                        Road[] temp = (Road[])routeObject;
-//
-//                        for (Road r : temp)
-//                        {
-//                            route.add(r);
-//                        }
-                        String replyString = reply.getContent();
-                        String[] nodeIDs = replyString.split(":");
-                        Node previousNode = currentDestination;
-
-                        for (int i = 0, j = nodeIDs.length; i < j; i++)
-                        {
-                            Node n = world.getNodeByID(Integer.parseInt(nodeIDs[i]));
-                            route.add(new Road(previousNode, n));
-                            previousNode = n;
-                        }
-
-                        received = true;
-
-                        //Retrieve first destination from route
-                        currentDestination = route.get(0).getDestination();
-                        route.remove(0);
-                    }
-                    catch (Exception e)
-                    {
-                        e.printStackTrace();
-                    }
-
-                    System.out.println(getLocalName() + ": received route");
-                    //Create confirmation message
-                    ACLMessage confirmation = reply.createReply();
-
-                    //Set confirmation "metadata"
-                    confirmation.setPerformative(ACLMessage.INFORM);
-                    confirmation.setInReplyTo(reply.getInReplyTo());
-                    confirmation.setConversationId(reply.getConversationId());
-
-                    //Set confirmation content
-                    String outcome = received ? "Yes" : "No";
-                    confirmation.setContent(outcome);
-
-                    //Send confirmation
-                    send(confirmation);
-
-                    step = 0;
-                }
-                else
-                {
-                    block();
-                }
+                System.out.println(getLocalName() + ": New destination: Node " + currentDestination.id);
             }
-        };
+        }
+        else if (depotAID != null)
+        {
+            System.out.println(getLocalName() + ".Move(): waiting for route request to be resolved");
+        }
+        else
+        {
+            System.out.println(getLocalName() + ".Move(): waiting for depotAID");
+        }
+    }
 
-        addBehaviour(cyclicBehaviourUpdate);
-        System.out.println(getLocalName() + ": update behaviour added");
+    private void DeliverParcels()
+    {
+        List<Parcel> delivery = new ArrayList<Parcel>();
+
+        for (Parcel p : parcels)
+        {
+            if (p.getDestination() == currentDestination)
+            {
+                delivery.add(p);
+            }
+        }
+
+        parcels.removeAll(delivery);
+        currentDestination.DeliverParcels(delivery);
+
+        System.out.println(getLocalName() + ": " + delivery.size() + " parcels delivered to Node " + currentDestination.id);
+    }
+
+    private void SendRouteRequest()
+    {
+        ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+
+        System.out.println(getLocalName() + ": sending route request to agent " + depotAID.getLocalName());
+
+        // Setup request values
+
+        request.addReceiver(depotAID);
+        request.setContent("Route");
+        request.setConversationId("Route_Request");
+        request.setReplyWith("request" + System.currentTimeMillis()); // Unique ID
+
+        // Send request
+        send(request);
+
+        // Setup template to receive responses
+        mt = MessageTemplate.and(MessageTemplate.MatchConversationId("Route_Request"),
+                MessageTemplate.MatchInReplyTo(request.getReplyWith()));
+
+        step++;
+    }
+
+    private void ReceiveRouteReply()
+    {
+        // Wait for replies and store their content
+        ACLMessage reply = receive(mt);
+        boolean received = false;
+
+        if (reply != null)
+        {
+            try
+            {
+                //Serialize as strings
+                String replyString = reply.getContent();
+                String[] nodeIDs = replyString.split(":");
+                Node previousNode = currentDestination;
+
+                for (int i = 0, j = nodeIDs.length; i < j; i++)
+                {
+                    Node n = world.getNodeByID(Integer.parseInt(nodeIDs[i]));
+                    route.add(new Road(previousNode, n));
+                    previousNode = n;
+                }
+
+//                        List<Road> receivedRoute = (List<Road>)reply.getContentObject();
+//
+//                        if (receivedRoute == null)
+//                        {
+//                            System.out.println(getLocalName() + ": WARNING: received null route");
+//                        }
+//                        else
+//                        {
+                //route.addAll(receivedRoute);
+                System.out.println(getLocalName() + ": received route");
+                received = true;
+
+                //Retrieve first destination from route
+                currentDestination = route.get(0).getDestination();
+                route.remove(0);
+                //}
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+
+            //Create confirmation message
+            ACLMessage confirmation = reply.createReply();
+
+            //Set confirmation "metadata"
+            confirmation.setPerformative(ACLMessage.INFORM);
+            confirmation.setInReplyTo(reply.getInReplyTo());
+            confirmation.setConversationId(reply.getConversationId());
+
+            //Set confirmation content
+            String outcome = received ? "Yes" : "No";
+            confirmation.setContent(outcome);
+
+            //Send confirmation
+            send(confirmation);
+
+            step = 0;
+        }
+//        else
+//        {
+//            block();
+//        }
     }
 }

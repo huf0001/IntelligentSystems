@@ -37,6 +37,11 @@ public class World extends JPanel
         return nodes.get((int)RandomFloatBetween(0, nodes.size() - 1));
     }
 
+    public Depot getDepot()
+    {
+        return depot;
+    }
+
     public Node getNodeByID(int id)
     {
         return graph.getNodeWithID(id);
