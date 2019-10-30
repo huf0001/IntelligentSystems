@@ -59,7 +59,7 @@ public class World extends JPanel
 
             //Start the trucks on the container
             try {
-                AgentController ag = Simulation.getContainer().acceptNewAgent("Truck" + i, truck);
+                AgentController ag = Simulation.getContainerController().acceptNewAgent("Truck" + i, truck);
                 ag.start();
             } catch (StaleProxyException e) {
                 e.printStackTrace();

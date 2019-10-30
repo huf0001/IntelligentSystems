@@ -14,16 +14,16 @@ public class Simulation
 {
     //Private Fields---------------------------------------------------------------------------------------------------------------------------------
 
-    private static ContainerController container = null;
-    private static BufferedWriter p_stdin;
-    private static Process p;
+    private static ContainerController containerController = null;
+    private static BufferedWriter bufferedWriter;
+    private static Process process;
     private static final float TARGET_FRAME_DURATION = 1000 / 60;
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
-    public static ContainerController getContainer()
+    public static ContainerController getContainerController()
     {
-        return container;
+        return containerController;
     }
 
     //Constructor------------------------------------------------------------------------------------------------------------------------------------
@@ -48,7 +48,7 @@ public class Simulation
         }
 
         //get stdin of shell
-         p_stdin = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
+         bufferedWriter = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
     }
 
     private static void StartJADE()
@@ -56,9 +56,9 @@ public class Simulation
         try
         {
             //single execution
-            p_stdin.write("java -cp lib\\jade.jar jade.Boot -gui");
-            p_stdin.newLine();
-            p_stdin.flush();
+            bufferedWriter.write("java -cp lib\\jade.jar jade.Boot -gui");
+            bufferedWriter.newLine();
+            bufferedWriter.flush();
         }
         catch (IOException e)
         {
@@ -94,9 +94,9 @@ public class Simulation
     {
         // finally close the shell by execution exit command
         try {
-            p_stdin.write("exit");
-            p_stdin.newLine();
-            p_stdin.flush();
+            bufferedWriter.write("exit");
+            bufferedWriter.newLine();
+            bufferedWriter.flush();
         }
         catch (IOException e)
         {
@@ -104,7 +104,7 @@ public class Simulation
         }
 
         // write stdout of shell (=output of all commands)
-        Scanner s = new Scanner( p.getInputStream() );
+        Scanner s = new Scanner( process.getInputStream() );
 
         while (s.hasNext())
         {
@@ -118,7 +118,7 @@ public class Simulation
         //Start JADE
         OpenCMDShell();
         StartJADE();
-        container = GetJADEContainer();
+        containerController = GetJADEContainer();
 
         JFrame frame = new JFrame("Delivery Routing");
         World world = new World();
