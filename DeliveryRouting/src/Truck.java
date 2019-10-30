@@ -22,7 +22,6 @@ public class Truck extends Agent
     private float weightLimit;
     private float speed = 1f;
     private boolean requestingRoute;
-    private int routeRequestStep = 0;
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
@@ -68,6 +67,7 @@ public class Truck extends Agent
 
     protected void setup()
     {
+        System.out.println(getLocalName() + ": setup");
         CreateCyclicBehaviourListening();
         CreateCyclicBehaviourRequestRoute();
     }
@@ -170,15 +170,55 @@ public class Truck extends Agent
     {
         CyclicBehaviour cyclicBehaviourRequestRoute = new CyclicBehaviour(this)
         {
-            //private int step;
+            private int step = 0;
             private MessageTemplate mt;
 
             public void action()
             {
-                System.out.println(getLocalName() + ".BehaviourRequestRoute");
-                switch (routeRequestStep) {
+                System.out.println(getLocalName() + ".CyclicBehaviourRequestRoute");
+
+                switch (step)
+                {
                     case 0:
-                        block();
+                        double distance = Vector2.distance(position, currentDestination.position);
+                        Vector2 toCurrentNode = currentDestination.position.minus(position);
+
+                        toCurrentNode.normalize();
+                        toCurrentNode = toCurrentNode.multiply(speed < distance ? speed : distance);
+                        position = position.add(toCurrentNode);
+
+//        if (depotAID == null)
+//        {
+//            System.out.println(getLocalName() + ": depotAID is null");
+//        }
+
+                        if (Vector2.distance(position, currentDestination.position) == 0 && !requestingRoute && depotAID != null)
+                        {
+                            DeliverParcels();
+
+                            if (route.size() == 0)
+                            {
+                                //route.add(world.getRandomRoad(currentDestination));//For testing
+
+                                //TODO: request new route
+                                requestingRoute = true;
+                                step++;
+                                //CreateCyclicBehaviourRequestRoute();
+                                System.out.println(getLocalName() + ": requesting route; setting requestingRoute to true");
+                            }
+                            else
+                            {
+                                currentDestination = route.get(0).getDestination();
+                                route.remove(0);
+
+                                System.out.println(getLocalName() + ": New destination: Node " + currentDestination.id);
+                            }
+                        }
+                        else
+                        {
+                            System.out.println(getLocalName() + ".GoToNextNode(): waiting for route request to be resolved");
+                        }
+
                         break;
                     case 1:
                         ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
@@ -198,7 +238,7 @@ public class Truck extends Agent
                         mt = MessageTemplate.and(MessageTemplate.MatchConversationId("Route_Request"),
                                 MessageTemplate.MatchInReplyTo(request.getReplyWith()));
 
-                        routeRequestStep++;
+                        step++;
                         break;
                     case 2:
                         // Wait for replies and store their content
@@ -237,7 +277,7 @@ public class Truck extends Agent
                             //Send confirmation
                             send(confirmation);
 
-                            routeRequestStep = 0;
+                            step = 0;
                             requestingRoute = false;
                         }
                         else
@@ -248,54 +288,53 @@ public class Truck extends Agent
                         break;
                 }
             }
-
-//            public boolean done()
-//            {
-//                return routeRequestStep == 3;
-//            }
         };
 
         addBehaviour(cyclicBehaviourRequestRoute);
         System.out.println(getLocalName() + ": route request behaviour added");
     }
 
-    public void GoToNextNode ()
-    {
-        double distance = Vector2.distance(position, currentDestination.position);
-        Vector2 toCurrentNode = currentDestination.position.minus(position);
-
-        toCurrentNode.normalize();
-        toCurrentNode = toCurrentNode.multiply(speed < distance ? speed : distance);
-        position = position.add(toCurrentNode);
-
-        if (depotAID == null)
-        {
-            System.out.println(getLocalName() + ": depotAID is null");
-        }
-
-        if (Vector2.distance(position, currentDestination.position) == 0 && !requestingRoute && depotAID != null)
-        {
-            DeliverParcels();
-
-            if (route.size() == 0)
-            {
-                //route.add(world.getRandomRoad(currentDestination));//For testing
-
-                //TODO: request new route
-                requestingRoute = true;
-                routeRequestStep = 1;
-                //CreateCyclicBehaviourRequestRoute();
-                System.out.println(getLocalName() + ": requesting route");
-            }
-            else
-            {
-                currentDestination = route.get(0).getDestination();
-                route.remove(0);
-
-                System.out.println(getLocalName() + ": New destination: Node " + currentDestination.id);
-            }
-        }
-    }
+//    public void GoToNextNode ()
+//    {
+//        double distance = Vector2.distance(position, currentDestination.position);
+//        Vector2 toCurrentNode = currentDestination.position.minus(position);
+//
+//        toCurrentNode.normalize();
+//        toCurrentNode = toCurrentNode.multiply(speed < distance ? speed : distance);
+//        position = position.add(toCurrentNode);
+//
+////        if (depotAID == null)
+////        {
+////            System.out.println(getLocalName() + ": depotAID is null");
+////        }
+//
+//        if (Vector2.distance(position, currentDestination.position) == 0 && !requestingRoute && depotAID != null)
+//        {
+//            DeliverParcels();
+//
+//            if (route.size() == 0)
+//            {
+//                //route.add(world.getRandomRoad(currentDestination));//For testing
+//
+//                //TODO: request new route
+//                requestingRoute = true;
+//                //CreateCyclicBehaviourRequestRoute();
+//                System.out.println(getLocalName() + ": requesting route; setting requestingRoute to true");
+//            }
+//            else
+//            {
+//                currentDestination = route.get(0).getDestination();
+//                route.remove(0);
+//
+//                System.out.println(getLocalName() + ": New destination: Node " + currentDestination.id);
+//            }
+//        }
+//        else
+//        {
+//            System.out.println(getLocalName() + ".GoToNextNode(): waiting for route request to be resolved");
+//        }
+//
+//    }
 
     private void DeliverParcels()
     {
