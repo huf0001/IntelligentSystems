@@ -4,6 +4,7 @@ public class Road
 
     private Node source;
     private Node destination;
+    private double weight;
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
@@ -17,12 +18,17 @@ public class Road
         return destination;
     }
 
+    public double getWeight(){
+        return weight;
+    }
+
     //Constructor------------------------------------------------------------------------------------------------------------------------------------
 
     public Road (Node source, Node destination)
     {
         this.source = source;
         this.destination = destination;
+        weight = Vector2.distance(source.position, destination.position);
     }
 
     //Methods----------------------------------------------------------------------------------------------------------------------------------------
