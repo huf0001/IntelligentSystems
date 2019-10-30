@@ -19,7 +19,7 @@ public class Truck extends Agent
     private Node currentDestination;
     private Vector2 position;
     private float weightLimit;
-    private float speed = 1f;
+    private float speed = 0.1f;
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
