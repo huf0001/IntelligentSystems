@@ -1,8 +1,10 @@
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,9 +13,11 @@ public class Truck extends Agent
 {
     //Private Fields --------------------------------------------------------------------------------------------------------------------------------
 
+
     private World world;
     private AID depotAID = null;
-    private List<Road> route = new ArrayList<Road>();
+    private List<Node> route = new ArrayList<Node>();
+
     private List<Parcel> parcels = new ArrayList<Parcel>();
     private Node currentDestination;
     private Vector2 position;
@@ -27,11 +31,11 @@ public class Truck extends Agent
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
-    public Vector2 getPosition()
-    {
-        return position;
-    }
+    //Basic Public Properties
+    public Vector2 getPosition() { return position; }
+    public float getWeightLimit() { return weightLimit; }
 
+    //Complex Public Properties
     public void setDepotAID(AID value)
     {
         if (value == null)
@@ -53,6 +57,18 @@ public class Truck extends Agent
         {
             System.out.println(getLocalName() + ": received Depot AID; set AID is valid");
         }
+    }
+
+    public void setRoute(List<Integer> value)
+    {
+        List<Node> route = new ArrayList<Node>();
+
+        for (Integer i : value)
+        {
+            route.add(world.getGraph().getNodeWithID(i));
+        }
+
+        this.route = route;
     }
 
     //Constructor------------------------------------------------------------------------------------------------------------------------------------
@@ -212,6 +228,91 @@ public class Truck extends Agent
         }
     }
 
+    private void CreateBehaviourRequestRoute()
+    {
+        Behaviour behaviourRequestRoute = new Behaviour(this)
+        {
+            private int step;
+            private MessageTemplate mt;
+
+            public void action()
+            {
+                switch (step) {
+                    case 0:
+                        ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+
+                        // Setup request values
+                        request.addReceiver(depotAID);
+                        request.setContent("Route");
+                        request.setConversationId("Route_Request");
+                        request.setReplyWith("request" + System.currentTimeMillis()); // Unique ID
+
+                        // Send request
+                        send(request);
+
+                        // Setup template to receive responses
+                        mt = MessageTemplate.and(MessageTemplate.MatchConversationId("Route_Request"),
+                                MessageTemplate.MatchInReplyTo(request.getReplyWith()));
+
+                        step++;
+                        break;
+                    case 1:
+                        // Wait for replies and store their content
+                        ACLMessage reply = receive(mt);
+                        boolean received = false;
+
+                        if (reply != null)
+                        {
+                            try
+                            {
+                                //Store route
+                                route = (List<Node>) reply.getContentObject();
+                                received = true;
+
+                                //Retrieve first destination from route
+                                currentDestination = route.get(0);
+                                route.remove(0);
+                            }
+                            catch (UnreadableException e)
+                            {
+                                e.printStackTrace();
+                            }
+
+                            //Create confirmation message
+                            ACLMessage confirmation = reply.createReply();
+
+                            //Set confirmation "metadata"
+                            confirmation.setPerformative(ACLMessage.INFORM);
+                            confirmation.setInReplyTo(reply.getInReplyTo());
+                            confirmation.setConversationId(reply.getConversationId());
+
+                            //Set confirmation content
+                            String outcome = received ? "Yes" : "No";
+                            confirmation.setContent(outcome);
+
+                            //Send confirmation
+                            send(confirmation);
+
+                            step++;
+                        }
+                        else
+                        {
+                            block();
+                        }
+
+                        break;
+                }
+            }
+
+            public boolean done()
+            {
+                return step == 2;
+            }
+        };
+
+        addBehaviour(behaviourRequestRoute);
+    }
+
     private void Move()
     {
         double distance = Vector2.distance(position, currentDestination.position);
@@ -232,7 +333,7 @@ public class Truck extends Agent
             }
             else
             {
-                currentDestination = route.get(0).getDestination();
+                currentDestination = route.get(0);
                 route.remove(0);
                 System.out.println(getLocalName() + ": New destination: Node " + currentDestination.id);
             }
@@ -302,7 +403,7 @@ public class Truck extends Agent
                 for (int i = 0, j = nodeIDs.length; i < j; i++)
                 {
                     Node n = world.getNodeByID(Integer.parseInt(nodeIDs[i]));
-                    route.add(new Road(previousNode, n));
+                    route.add(n);
                     previousNode = n;
                 }
 
@@ -319,7 +420,7 @@ public class Truck extends Agent
                 received = true;
 
                 //Retrieve first destination from route
-                currentDestination = route.get(0).getDestination();
+                currentDestination = route.get(0);
                 route.remove(0);
                 //}
             }
