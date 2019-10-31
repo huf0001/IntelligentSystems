@@ -87,12 +87,12 @@ public class VrpFitnessFunc extends FitnessFunction {
         Node lastVisited = store;
 
         for (int pos : positions) {
-            final Node node = depot.GetNodesWithParcelsAssigned().get(pos);//graph.getNodeWithID(pos);
-            totalDistance += Vector2.distance(lastVisited.position, node.position);//lastVisited.distanceTo(node);
+            final Node node = depot.GetNodesWithParcelsAssigned().get(pos);
+            totalDistance += Vector2.distance(lastVisited.position, node.position);
             lastVisited = node;
         }
 
-        totalDistance += Vector2.distance(lastVisited.position, store.position);//lastVisited.distanceTo(store);//distance back to the store
+        totalDistance += Vector2.distance(lastVisited.position, store.position);//distance back to the store
 
         return totalDistance;
     }
@@ -113,7 +113,7 @@ public class VrpFitnessFunc extends FitnessFunction {
         final List<Integer> route = new ArrayList<>();
         final List<Double> positions = new ArrayList<>();
         final int graphDimension = depot.GetNodesWithParcelsAssigned().size();
-        for (int i = 1; i < graphDimension; ++i) {
+        for (int i = 0; i < graphDimension; i++) {
             int chromosomeValue = (Integer) chromosome.getGene(i).getAllele();
             if (chromosomeValue == vehicleNumber) {
                 route.add(i);

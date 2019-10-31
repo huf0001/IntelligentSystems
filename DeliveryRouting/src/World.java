@@ -74,7 +74,7 @@ public class World extends JPanel
             depot.StartVRP();
         }
         catch (Exception e) {
-
+            e.printStackTrace();
         }
     }
 
@@ -127,7 +127,7 @@ public class World extends JPanel
         for (Map.Entry<Node, List<Node>> entry : graph.adjNodes.entrySet())
         {
             Node node = entry.getKey();
-            g.setColor(node.id == 0 ? Color.RED : Color.BLUE);
+            g.setColor(node.id == 0 ? Color.RED : (!depot.GetNodesWithParcelsAssigned().contains(node) ? Color.BLUE : Color.GREEN));
             g.fillOval((int) node.position.x - 5, (int) node.position.y - 5, 10, 10);
         }
 

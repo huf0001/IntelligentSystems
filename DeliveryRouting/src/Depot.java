@@ -57,10 +57,10 @@ public class Depot extends Agent
         GetParcels();
         for (Parcel p : parcels)
         {
-            int randNode = world.getRandomNode().id;
-            p.setDestination(world.getGraph().getNodeWithID(randNode));
-            nodesWithParcelsAssigned.add(world.getGraph().getNodeWithID(randNode));
-            System.out.println(randNode);
+            Node randNode = world.getRandomNode();
+            p.setDestination(randNode);
+            nodesWithParcelsAssigned.add(randNode);
+            System.out.println(randNode.id);
         }
     }
 
@@ -115,10 +115,11 @@ public class Depot extends Agent
         double total = 0.0;
 
         for (int i = 1; i <= numTrucks; ++i) {
-            final List<Integer> route = VrpFitnessFunc.getPositions(i, bestSolution, world.getGraph(), true);
+            List<Integer> route = VrpFitnessFunc.getPositions(i, bestSolution, world.getGraph(), true);
+            route = formatRoute(route);
             final double distanceRoute = VrpFitnessFunc.computeTotalDistance(i - 1, bestSolution, world.getGraph());
             final double demand = VrpFitnessFunc.computeTotalCoveredDemand(i, bestSolution, world.getGraph());
-            log.info("Vehicle #" + i + " :" + formatRoute(route));
+            log.info("Vehicle #" + i + " :" + route);
             log.info("Distance: " + distanceRoute);
             log.info("Demand: " + demand);
             total += distanceRoute;
@@ -162,9 +163,9 @@ public class Depot extends Agent
 
     private List<Integer> formatRoute(List<Integer> list) {
         final List<Integer> result = new ArrayList<>(Collections.singletonList(0));//source node
-        result.addAll(list.stream().map(aList -> aList + 1).collect(Collectors.toList()));
+        result.addAll(list.stream().collect(Collectors.toList()));
 
-        for (int i = 0; i < result.size(); i++)
+        for (int i = 1; i < result.size(); i++)
         {
             result.set(i, nodesWithParcelsAssigned.get(result.get(i)).id);
             //System.out.println(result.get(i));
