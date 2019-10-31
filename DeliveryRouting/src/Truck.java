@@ -176,9 +176,16 @@ public class Truck extends Agent
             String msgContent = msg.getContent();
             String[] parcelIDs = msgContent.split(":");
 
-            for (String id : parcelIDs)
+            try
             {
-                newParcels.add(world.getDepot().getParcelByID(Integer.parseInt(id)));
+                for (String id : parcelIDs)
+                {
+                    newParcels.add(world.getDepot().getParcelByID(Integer.parseInt(id)));
+                }
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
             }
 
             parcels.addAll(newParcels);
