@@ -21,7 +21,9 @@ public class Truck extends Agent
     private float speed = 5f;
 
     private int step = 0;
-    private MessageTemplate mt;
+    private MessageTemplate routeReplyTemplate = null;
+    private MessageTemplate constraintRequestTemplate = null;
+    private MessageTemplate parcelAllocationTemplate = null;
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
@@ -68,6 +70,8 @@ public class Truck extends Agent
     protected void setup()
     {
         System.out.println(getLocalName() + ": setup");
+        constraintRequestTemplate = MessageTemplate.MatchConversationId("Constraint_Request");
+        parcelAllocationTemplate = MessageTemplate.MatchConversationId("Parcel_Allocation");
         CreateCyclicBehaviourUpdate();
     }
 
@@ -115,12 +119,8 @@ public class Truck extends Agent
     private void CheckForConstraintRequest()
     {
         //Declare template and message variables
-        MessageTemplate mt;
         ACLMessage msg = null;
-
-        mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
-                MessageTemplate.MatchConversationId("Constraint_Request"));
-        msg = receive(mt);
+        msg = receive(constraintRequestTemplate);
 
         if (msg != null)
         {
@@ -141,24 +141,22 @@ public class Truck extends Agent
         reply.setConversationId(request.getConversationId());
 
         //Set reply content
-        String capacity = "%d", weightLimit;
+        String capacity = "" + weightLimit;
         reply.setContent(capacity);
 
         //Send reply
         send(reply);
+        System.out.println(getLocalName() + ": received Constraint Request from " + request.getSender().getLocalName() + ", replied with constraints");
     }
 
     private void CheckForParcelAllocation()
     {
         //Declare template and message variables
-        MessageTemplate mt;
         ACLMessage msg = null;
         boolean received = false;
 
         //Check for Parcel_Allocation
-        mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                MessageTemplate.MatchConversationId("Parcel_Allocation"));
-        msg = receive (mt);
+        msg = receive (parcelAllocationTemplate);
 
         if (msg != null)
         {
@@ -175,7 +173,6 @@ public class Truck extends Agent
             parcels.addAll(newParcels);
             received = true;
             System.out.println(getLocalName() + ": received " + newParcels.size() + " parcels. Now have " + parcels.size() + " parcels");
-
 
 //            //Wouldn't accept lists of parcels
 //            try
@@ -212,8 +209,6 @@ public class Truck extends Agent
 
             //Send reply
             send(reply);
-
-            msg = null;
         }
     }
 
@@ -232,9 +227,6 @@ public class Truck extends Agent
 
             if (route.size() == 0)
             {
-                //route.add(world.getRandomRoad(currentDestination));//For testing
-
-                //TODO: request new route
                 step++;
                 System.out.println(getLocalName() + ": requesting route; setting requestingRoute to true");
             }
@@ -242,7 +234,6 @@ public class Truck extends Agent
             {
                 currentDestination = route.get(0).getDestination();
                 route.remove(0);
-
                 System.out.println(getLocalName() + ": New destination: Node " + currentDestination.id);
             }
         }
@@ -277,22 +268,18 @@ public class Truck extends Agent
     private void SendRouteRequest()
     {
         ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
-
-        System.out.println(getLocalName() + ": sending route request to agent " + depotAID.getLocalName());
-
-        // Setup request values
-
         request.addReceiver(depotAID);
         request.setContent("Route");
         request.setConversationId("Route_Request");
         request.setReplyWith("request" + System.currentTimeMillis()); // Unique ID
 
+        System.out.println(getLocalName() + ": sending route request to agent " + depotAID.getLocalName());
+
         // Send request
         send(request);
 
         // Setup template to receive responses
-        mt = MessageTemplate.and(MessageTemplate.MatchConversationId("Route_Request"),
-                MessageTemplate.MatchInReplyTo(request.getReplyWith()));
+        routeReplyTemplate = MessageTemplate.MatchConversationId("Route_Request");
 
         step++;
     }
@@ -300,7 +287,7 @@ public class Truck extends Agent
     private void ReceiveRouteReply()
     {
         // Wait for replies and store their content
-        ACLMessage reply = receive(mt);
+        ACLMessage reply = receive(routeReplyTemplate);
         boolean received = false;
 
         if (reply != null)

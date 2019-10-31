@@ -5,6 +5,7 @@ import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.tools.sniffer.Message;
 import jade.util.leap.Serializable;
 
 import org.chocosolver.solver.Model;
@@ -31,6 +32,8 @@ import java.util.Map;
 
 public class Depot extends Agent
 {
+    //Private Fields---------------------------------------------------------------------------------------------------------------------------------
+
     private World world;
     private Parcel[] parcels = new Parcel[30];
     private List<AID> trucksAtDepot;
@@ -40,11 +43,17 @@ public class Depot extends Agent
     private List<Node> unroutedNodes;
     private List<Node> routedNodes;
 
+    //Public Properties------------------------------------------------------------------------------------------------------------------------------
+
+    //Constructor------------------------------------------------------------------------------------------------------------------------------------
+
     public Depot(World world, List<AID> trucksAtDepot)
     {
         this.world = world;
         this.trucksAtDepot = trucksAtDepot;
     }
+
+    //Methods----------------------------------------------------------------------------------------------------------------------------------------
 
     public Parcel getParcelByID(int id)
     {
@@ -59,11 +68,15 @@ public class Depot extends Agent
         return null;
     }
 
-    private BoolVar[] getColumn(BoolVar[][] array, int index){
+    private BoolVar[] getColumn(BoolVar[][] array, int index)
+    {
         BoolVar[] column = new BoolVar[array[0].length]; // Here I assume a rectangular 2D array!
-        for(int i = 0; i < column.length; i++){
+
+        for(int i = 0; i < column.length; i++)
+        {
             column[i] = array[i][index];
         }
+
         return column;
     }
 
@@ -75,7 +88,6 @@ public class Depot extends Agent
         //AssignParcels();  //Matches up trucks with parcels
         //CreateRoutes();
         CreateBehaviourAllocateParcels();     //Sends assigned parcels to the truck via messages
-
         CreateCyclicBehaviourCheckForRouteRequests();
     }
 
@@ -90,19 +102,24 @@ public class Depot extends Agent
     }
 
     public void CreateBehaviourRequestConstraints() {
-        Behaviour behaviourRequestConstraints = new Behaviour(this) {
+        Behaviour behaviourRequestConstraints = new Behaviour(this)
+        {
             private int truckAmount = 0;
             private int truckResponsesReceived = 0;
             private int step = 0;
             private MessageTemplate mt;
 
-            public void action() {
-                switch (step) {
+            public void action()
+            {
+                switch (step)
+                {
                     case 0:
+                        System.out.println(getLocalName() + ": Requesting Constraints");
                         ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
 
                         // Ask all trucks at depot
-                        for (AID truck : trucksAtDepot) {
+                        for (AID truck : trucksAtDepot)
+                        {
                             request.addReceiver(truck);
                             truckAmount++;
                         }
@@ -116,30 +133,44 @@ public class Depot extends Agent
                         send(request);
 
                         // Setup template to receive responses
-                        mt = MessageTemplate.and(MessageTemplate.MatchConversationId("Constraint_Request"),
-                                MessageTemplate.MatchInReplyTo(request.getReplyWith()));
+                        mt = MessageTemplate.MatchConversationId("Constraint_Request");
 
                         step = 1;
                         break;
                     case 1:
+                        System.out.println(getLocalName() + ": Checking for Constraint Replies");
                         ACLMessage reply = receive(mt);
+
                         // Wait for replies and store their content
-                        if (reply != null) {
-                            if (reply.getPerformative() == ACLMessage.INFORM) {
-                                if (truckCapacity.containsKey(reply.getSender())) {
+                        if (reply != null)
+                        {
+                            if (reply.getPerformative() == ACLMessage.INFORM)
+                            {
+                                if (truckCapacity.containsKey(reply.getSender()))
+                                {
                                     truckCapacity.replace(reply.getSender(), Float.parseFloat(reply.getContent()));
-                                } else {
+                                }
+                                else
+                                {
                                     truckCapacity.put(reply.getSender(), Float.parseFloat(reply.getContent()));
                                 }
                             }
+
+                            System.out.println(getLocalName() + ": received Constraint Reply from " + reply.getSender().getLocalName());
                             truckResponsesReceived++;
-                        } else {
+                        }
+                        else
+                        {
+                            System.out.println(getLocalName() + ": no Constraint Replies");
                             block();
                         }
 
-                        if (truckResponsesReceived >= truckAmount) {
+                        if (truckResponsesReceived >= truckAmount)
+                        {
+                            System.out.println(getLocalName() + ": received all Constraint Replies");
                             step = 2;
                         }
+
                         break;
                 }
             }
@@ -229,7 +260,8 @@ public class Depot extends Agent
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    public void CreateBehaviourAllocateParcels() {
+    public void CreateBehaviourAllocateParcels()
+    {
         Behaviour behaviourAllocateParcels = new Behaviour(this) {
             private int truckAmount = 0;
             private int truckResponsesReceived = 0;
@@ -340,12 +372,12 @@ public class Depot extends Agent
             {
                 System.out.println(getLocalName() + ": checking for route requests");
                 // Match a request for a route
-                MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
-                        MessageTemplate.MatchConversationId("Route_Request"));
+                MessageTemplate mt = MessageTemplate.MatchConversationId("Route_Request");
                 ACLMessage request = receive(mt);
 
                 if (request != null)
                 {
+                    //TODO: if no route, store request and return to when a route has been established for the requesting truck
                     System.out.println(getLocalName() + ": found route request");
                     ACLMessage reply = request.createReply();
                     reply.setPerformative(ACLMessage.INFORM);
@@ -398,10 +430,5 @@ public class Depot extends Agent
 
         addBehaviour(cyclicBehaviourCheckForRouteRequests);
         System.out.println("Depot: created check for route requests behaviour");
-    }
-
-    //Not used; currently obsolesced by CreateCyclicBehaviourCheckForRouteRequests()
-    public void GiveRoute(AID truck){
-        throw new UnsupportedOperationException("Not implemented");
     }
 }
