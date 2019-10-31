@@ -32,19 +32,21 @@ public class Depot extends Agent
     //Private Fields---------------------------------------------------------------------------------------------------------------------------------
 
     private World world;
-    private Parcel[] parcels = new Parcel[30];
+    private Map<AID, List<Parcel>> truckParcels = new HashMap<AID, List<Parcel>>();
+    private List<Parcel> allParcels = new ArrayList<Parcel>();
+    private List<Parcel> unallocatedParcels = new ArrayList<Parcel>();
+
+    private int numTrucks;
     private List<AID> trucksAtDepot;
     private Map<AID, Float> truckCapacity = new HashMap<AID, Float>();
+
     private Map<AID, List<Integer>> routes = new HashMap<AID, List<Integer>>();
-    private Map<AID, List<Parcel>> truckParcels = new HashMap<AID, List<Parcel>>();
-    private List<Node> unroutedNodes;
+    private List<ACLMessage> pendingRouteRequests = new ArrayList<>();
     private List<Node> nodesWithParcelsAssigned = new ArrayList<>();
-    private int numTrucks;
+
     private static Logger log = LoggerFactory.getLogger(Depot.class);
     private static final int EVOLUTIONS = 2000;
     private static final int POPULATION_SIZE = 350;
-
-    private List<ACLMessage> pendingRouteRequests = new ArrayList<>();
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
@@ -57,7 +59,7 @@ public class Depot extends Agent
     {
         int totWeight = 0;
 
-        for (Parcel p : parcels)
+        for (Parcel p : allParcels)
         {
             totWeight += p.getWeight();
         }
@@ -71,7 +73,7 @@ public class Depot extends Agent
     {
         int totalWeight = 0;
 
-        for (Parcel p: parcels)
+        for (Parcel p: allParcels)
         {
             if (p.getDestination().id == node.id)
             {
@@ -84,7 +86,7 @@ public class Depot extends Agent
 
     public Parcel getParcelByID(int id)
     {
-        for (Parcel p : parcels)
+        for (Parcel p : allParcels)
         {
             if (p.getID() == id)
             {
@@ -105,12 +107,17 @@ public class Depot extends Agent
         this.world = world;
         GetParcels();
 
-        for (Parcel p : parcels)
+        for (Parcel p : allParcels)
         {
             Node randNode = world.getRandomNode();
             p.setDestination(randNode);
             nodesWithParcelsAssigned.add(randNode);
             System.out.println(randNode.id);
+        }
+
+        for (AID truckAID : trucksAtDepot)
+        {
+            truckParcels.put(truckAID, new ArrayList<Parcel>());
         }
     }
 
@@ -120,7 +127,13 @@ public class Depot extends Agent
         {
             String data = new String(Files.readAllBytes(Paths.get("Parcels.json")));
             Gson gson = new Gson();
-            parcels = gson.fromJson(data, Parcel[].class);
+            Parcel[] parcelArray = gson.fromJson(data, Parcel[].class);
+
+            for (Parcel parcel : parcelArray)
+            {
+                allParcels.add(parcel);
+                unallocatedParcels.add(parcel);
+            }
         }
         catch (IOException e)
         {
@@ -131,10 +144,8 @@ public class Depot extends Agent
     protected void setup()
     {
         System.out.println("Depot: setup");
-        //GetParcels();         //Threw an error
         CreateBehaviourRequestConstraints();
         //AssignParcels();  //Matches up trucks with parcels
-        //CreateRoutes();
         CreateBehaviourAllocateParcels();     //Sends assigned parcels to the truck via messages
         CreateCyclicBehaviourHandleRouteRequests();
     }
@@ -301,11 +312,32 @@ public class Depot extends Agent
             log.info("Demand: " + demand);
             total += distanceRoute;
 
-            //world.getTrucks().get(i - 1).setRoute(route);
-            routes.put(world.getTrucks().get(i-1).getAID(), route);
+            AID truckAID = world.getTrucks().get(i - 1).getAID();
+            routes.put(truckAID, route);
+            List<Parcel> allocatedParcels = new ArrayList<Parcel>();
+
+
+            for (Parcel parcel : unallocatedParcels)
+            {
+                for (Integer nodeID : route)
+                {
+                    if (parcel.getDestination().getId() == nodeID)
+                    {
+                        allocatedParcels.add(parcel);
+                        break;
+                    }
+                }
+            }
+
+            unallocatedParcels.removeAll(allocatedParcels);
+            truckParcels.get(truckAID).addAll(allocatedParcels);
+            log.info("Parcels allocated: " + allocatedParcels.size());
         }
 
         log.info("Total distance: " + total);
+        log.info("All parcels: " + allParcels.size());
+        log.info("Allocated parcels: " + (allParcels.size() - unallocatedParcels.size()));
+        log.info("Unallocated parcels: " + unallocatedParcels.size());
     }
 
     private List<Integer> formatRoute(List<Integer> list)
@@ -438,20 +470,18 @@ public class Depot extends Agent
 
                             //Serialize parcels as string
                             String parcelIDs = "";
-                            parcels[0] = new Parcel(0, 0);
+                            List<Parcel> allocatedParcels = truckParcels.get(truck);
 
-
-                            //TODO: allocate parcels from parcels according to routing rather than getting a random parcel for testing
-                            for (int i = 0; i < parcels.length; i++)
+                            for (int i = 0; i < allocatedParcels.size(); i++)
                             {
-                                if (parcels[i] != null)
+                                if (allocatedParcels.get(i) != null)
                                 {
                                     if (i > 0)
                                     {
                                         parcelIDs += ":";
                                     }
 
-                                    parcelIDs += parcels[i].getID();
+                                    parcelIDs += allocatedParcels.get(i).getID();
                                 }
                             }
 
