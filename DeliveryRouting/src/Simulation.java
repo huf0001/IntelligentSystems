@@ -18,7 +18,6 @@ public class Simulation
     private static ContainerController containerController = null;
     private static BufferedWriter bufferedWriter;
     private static Process process;
-    private static Calendar cal = null;
     private static final float TARGET_FRAME_DURATION = 1000 / 60;
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
@@ -124,7 +123,7 @@ public class Simulation
 
         JFrame frame = new JFrame("Delivery Routing");
         World world = null;
-        cal = Calendar.getInstance();
+        Calendar cal = Calendar.getInstance();
         boolean finished = false;
         float timeAtStartOfLoop;
         float frameDuration;
