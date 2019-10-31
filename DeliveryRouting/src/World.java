@@ -22,6 +22,8 @@ public class World extends JPanel
     private int width = 1200;
     private int height = 700;
 
+    private final boolean RENDER_FOLLOWED_ROUTES = true;
+
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
     //Basic Public Properties
@@ -137,13 +139,34 @@ public class World extends JPanel
         g.setColor(Color.BLACK);
 
         //Render Roads
-        for (Map.Entry<Node, List<Node>> entry : graph.adjNodes.entrySet())
+        if (RENDER_FOLLOWED_ROUTES)
         {
-            Node node = entry.getKey();
-            List<Node> nodeList = entry.getValue();
+            for (Truck truck : trucks)
+            {
+                List<Node> nodes = truck.getVisitedNodes();
 
-            for (Node n : nodeList) {
-                g.drawLine((int) n.position.x, (int) n.position.y, (int) node.position.x, (int) node.position.y);
+                for (int i = 0, j = nodes.size(); i < j - 1; i++)
+                {
+                    g.drawLine((int) nodes.get(i).position.x, (int) nodes.get(i).position.y, (int) nodes.get(i + 1).position.x, (int) nodes.get(i + 1).position.y);
+                }
+
+                if (nodes.size() > 0)
+                {
+                    g.drawLine((int) truck.getPosition().x, (int) truck.getPosition().y, (int) nodes.get(nodes.size() - 1).position.x, (int) nodes.get(nodes.size() - 1).position.y);
+                }
+            }
+        }
+        else
+        {
+            for (Map.Entry<Node, List<Node>> entry : graph.adjNodes.entrySet())
+            {
+                Node node = entry.getKey();
+                List<Node> nodeList = entry.getValue();
+
+                for (Node n : nodeList)
+                {
+                    g.drawLine((int) n.position.x, (int) n.position.y, (int) node.position.x, (int) node.position.y);
+                }
             }
         }
 

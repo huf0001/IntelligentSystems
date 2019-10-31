@@ -20,6 +20,7 @@ public class Truck extends Agent
 
     private List<Parcel> parcels = new ArrayList<Parcel>();
     private Node currentDestination;
+    private List<Node> visitedNodes = new ArrayList<Node>();
     private Vector2 position;
     private float weightLimit;
     private float speed = 5f;
@@ -34,6 +35,7 @@ public class Truck extends Agent
     //Basic Public Properties
     public Vector2 getPosition() { return position; }
     public float getWeightLimit() { return weightLimit; }
+    public List<Node> getVisitedNodes() { return visitedNodes; }
 
     //Complex Public Properties
     public void setDepotAID(AID value)
@@ -180,7 +182,10 @@ public class Truck extends Agent
             {
                 for (String id : parcelIDs)
                 {
-                    newParcels.add(world.getDepot().getParcelByID(Integer.parseInt(id)));
+                    if (isNumeric(id))
+                    {
+                        newParcels.add(world.getDepot().getParcelByID(Integer.parseInt(id)));
+                    }
                 }
             }
             catch (Exception e)
@@ -244,7 +249,10 @@ public class Truck extends Agent
 
             for (int i = 0, j = nodeIDs.length; i < j; i++)
             {
-                route.add(world.getNodeByID(Integer.parseInt(nodeIDs[i])));
+                if (isNumeric((nodeIDs[i])))
+                {
+                    route.add(world.getNodeByID(Integer.parseInt(nodeIDs[i])));
+                }
             }
 
             System.out.println(getLocalName() + ": received route");
@@ -298,6 +306,7 @@ public class Truck extends Agent
             }
             else
             {
+                visitedNodes.add(currentDestination);
                 currentDestination = route.get(0);
                 route.remove(0);
                 System.out.println(getLocalName() + ": New destination: Node " + currentDestination.id);
@@ -328,5 +337,19 @@ public class Truck extends Agent
         parcels.removeAll(delivery);
         currentDestination.DeliverParcels(delivery);
         System.out.println(getLocalName() + ": " + delivery.size() + " parcels delivered to Node " + currentDestination.id);
+    }
+
+    private boolean isNumeric (String s)
+    {
+        try
+        {
+            int i = Integer.parseInt(s);
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+
+        return true;
     }
 }
