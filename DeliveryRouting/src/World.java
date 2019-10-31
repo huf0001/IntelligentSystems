@@ -1,4 +1,3 @@
-import jade.core.Agent;
 import jade.core.AID;
 import jade.wrapper.AgentController;
 import jade.wrapper.ControllerException;
@@ -26,11 +25,15 @@ public class World extends JPanel
 
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
+    //Basic Public Properties
+
+    public Depot getDepot() { return depot; }
+    public NodeGraph getGraph() { return graph; }
     public int getHeight() { return height; }
-
     public List<Truck> getTrucks() { return trucks; }
+    public int getWidth() { return width; }
 
-    //For testing--------------------------------------------------------------
+    //Complex Public Properties
 
     public Node getRandomNode()
     {
@@ -38,25 +41,11 @@ public class World extends JPanel
         return nodes.get((int)RandomFloatBetween(0, nodes.size() - 1));
     }
 
-    public Depot getDepot()
-    {
-        return depot;
-    }
-
-    public Node getNodeByID(int id)
-    {
-        return graph.getNodeWithID(id);
-    }
-
     public Road getRandomRoad()
     {
         ArrayList<Node> nodes = new ArrayList<Node>(graph.adjNodes.keySet());
         return new Road(nodes.get(0), nodes.get((int)RandomFloatBetween(0, nodes.size() - 1)));
     }
-
-    public int getWidth() { return width; }
-
-    public NodeGraph getGraph() { return graph; }
 
     //Setup Methods----------------------------------------------------------------------------------------------------------------------------------
 
@@ -111,8 +100,6 @@ public class World extends JPanel
             e.printStackTrace();
         }
 
-//        try
-//        {
         AgentController agentController = Simulation.getContainerController().acceptNewAgent("Depot", depot);
         Object var = Simulation.getContainerController().getAgent("Depot");
 
@@ -131,11 +118,6 @@ public class World extends JPanel
                 ac.start();
             }
         }
-//        }
-//        catch (Exception e)
-//        {
-//            e.printStackTrace();
-//        }
     }
 
     private NodeGraph createGraph()
@@ -176,7 +158,7 @@ public class World extends JPanel
         for (Map.Entry<Node, List<Node>> entry : graph.adjNodes.entrySet())
         {
             Node node = entry.getKey();
-            g.setColor(node.id == 0 ? Color.RED : (!depot.GetNodesWithParcelsAssigned().contains(node) ? Color.BLUE : Color.GREEN));
+            g.setColor(node.id == 0 ? Color.RED : (!depot.getNodesWithParcelsAssigned().contains(node) ? Color.BLUE : Color.GREEN));
             g.fillOval((int) node.position.x - 5, (int) node.position.y - 5, 10, 10);
         }
 
@@ -190,6 +172,8 @@ public class World extends JPanel
     }
 
     //Utility Methods--------------------------------------------------------------------------------------------------------------------------------
+
+    public Node getNodeByID(int id) { return graph.getNodeWithID(id); }
 
     private float RandomFloatBetween(float min, float max)
     {

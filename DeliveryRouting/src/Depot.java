@@ -6,12 +6,8 @@ import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.tools.sniffer.Message;
-import jade.util.leap.Serializable;
 
-import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -22,18 +18,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
-import javax.swing.*;
 
-import org.chocosolver.solver.Model;
-import org.chocosolver.solver.Solution;
-import org.chocosolver.solver.Solver;
-import org.chocosolver.solver.constraints.Constraint;
-import org.chocosolver.solver.search.loop.monitors.IMonitorSolution;
-import org.chocosolver.solver.search.strategy.assignments.DecisionOperatorFactory;
-import org.chocosolver.solver.search.strategy.Search;
 import org.chocosolver.solver.variables.BoolVar;
-import org.chocosolver.solver.variables.IntVar;
-import org.chocosolver.util.tools.ArrayUtils;
 import org.jgap.*;
 import org.jgap.impl.DefaultConfiguration;
 import org.jgap.impl.DoubleGene;
@@ -49,7 +35,7 @@ public class Depot extends Agent
     private Parcel[] parcels = new Parcel[30];
     private List<AID> trucksAtDepot;
     private Map<AID, Float> truckCapacity = new HashMap<AID, Float>();
-    private Map<AID, List<Road>> routes = new HashMap<AID, List<Road>>();
+    private Map<AID, List<Integer>> routes = new HashMap<AID, List<Integer>>();
     private Map<AID, List<Parcel>> truckParcels = new HashMap<AID, List<Parcel>>();
     private List<Node> unroutedNodes;
     private List<Node> nodesWithParcelsAssigned = new ArrayList<>();
@@ -58,12 +44,15 @@ public class Depot extends Agent
     private static final int EVOLUTIONS = 2000;
     private static final int POPULATION_SIZE = 350;
 
+    private List<ACLMessage> pendingRouteRequests = new ArrayList<>();
+
     //Public Properties------------------------------------------------------------------------------------------------------------------------------
 
-    public List<Node> GetNodesWithParcelsAssigned() { return nodesWithParcelsAssigned; }
-
+    //Basic Public Properties
+    public List<Node> getNodesWithParcelsAssigned() { return nodesWithParcelsAssigned; }
     public int getNumTrucks() { return numTrucks; }
 
+    //Complex Public Properties
     public int getTotalDemand()
     {
         int totWeight = 0;
@@ -76,7 +65,37 @@ public class Depot extends Agent
         return totWeight;
     }
 
-    //Constructor------------------------------------------------------------------------------------------------------------------------------------
+    //Pseudo Public Properties
+
+    public int getNodeDemand(Node node)
+    {
+        int totalWeight = 0;
+
+        for (Parcel p: parcels)
+        {
+            if (p.getDestination().id == node.id)
+            {
+                totalWeight += p.getWeight();
+            }
+        }
+
+        return totalWeight;
+    }
+
+    public Parcel getParcelByID(int id)
+    {
+        for (Parcel p : parcels)
+        {
+            if (p.getID() == id)
+            {
+                return p;
+            }
+        }
+
+        return null;
+    }
+
+    //Setup Methods----------------------------------------------------------------------------------------------------------------------------------
 
     public Depot(World world, List<AID> trucksAtDepot)
     {
@@ -95,9 +114,7 @@ public class Depot extends Agent
         }
     }
 
-    //Methods----------------------------------------------------------------------------------------------------------------------------------------
-
-    public void GetParcels()
+    private void GetParcels()
     {
         try
         {
@@ -110,6 +127,107 @@ public class Depot extends Agent
             e.printStackTrace();
         }
     }
+
+    protected void setup()
+    {
+        System.out.println("Depot: setup");
+        //GetParcels();         //Threw an error
+        CreateBehaviourRequestConstraints();
+        //AssignParcels();  //Matches up trucks with parcels
+        //CreateRoutes();
+        CreateBehaviourAllocateParcels();     //Sends assigned parcels to the truck via messages
+        CreateCyclicBehaviourHandleRouteRequests();
+    }
+
+    //    private BoolVar[] getColumn(BoolVar[][] array, int index)
+//    {
+//        BoolVar[] column = new BoolVar[array[0].length]; // Here I assume a rectangular 2D array!
+//
+//        for(int i = 0; i < column.length; i++)
+//        {
+//            column[i] = array[i][index];
+//        }
+//
+//        return column;
+//    }
+//    private void AssignParcels(){
+//        Model m = new Model("Parcel Assignment for Trucks");
+//        int numParcels = parcels.length;
+//        int numTrucks = trucksAtDepot.size();
+//        BoolVar[][] assignment = m.boolVarMatrix(numParcels, numTrucks);
+//
+//        // Check num of trucks assigned to parcel = 1
+//        for (int i = 0; i < numParcels; i++)
+//        {
+//            m.sum(assignment[i], "=", 1).post();
+//        }
+//
+//        // Check total weight of parcels <= truck weight limit
+//        for (int i = 0; i < numTrucks; i++)
+//        {
+//            m.sum(getColumn(assignment, i), "<=", Math.round(truckCapacity.get(trucksAtDepot.get(i)))).post();
+//        }
+//
+//        Solver s = m.getSolver();
+//        s.solve();
+//
+//        // Print solution
+//        for (int i = 0; i < numParcels; i++)
+//        {
+//            for (int j = 0; j < numTrucks; j++)
+//            {
+//                System.out.print(assignment[i][j].getValue());
+//            }
+//            System.out.println();
+//        }
+//    }
+//
+//    private void AssignParcelsWithWeights(){
+//        Model m = new Model("Parcel Assignment for Trucks");
+//        int numParcels = parcels.length;
+//        int numTrucks = trucksAtDepot.size();
+//        BoolVar[][] assignment = m.boolVarMatrix(numParcels, numTrucks);
+//
+//        // Check num of trucks assigned to parcel = 1
+//        for (int i = 0; i < numParcels; i++)
+//        {
+//            m.sum(assignment[i], "=", 1).post();
+//        }
+//
+//        // Check total weight of parcels <= truck weight limit
+//        for (int i = 0; i < numTrucks; i++)
+//        {
+//            IntVar[] weights = getColumn(assignment, 1);
+//            for (int j = 0; j < numParcels; j++)
+//            {
+//                int weight = weights[j].getValue();
+//                weight *= parcels[j].getWeight();
+//                weights[j] = m.intVar(weight);
+//            }
+//
+//            m.sum(weights, "<=", Math.round(truckCapacity.get(trucksAtDepot.get(i)))).post();
+//        }
+//
+//        Solver s = m.getSolver();
+//        s.solve();
+//
+//        // Print solution
+//        for (int i = 0; i < numParcels; i++)
+//        {
+//            for (int j = 0; j < numTrucks; j++)
+//            {
+//                System.out.print(assignment[i][j].getValue());
+//            }
+//            System.out.println();
+//        }
+//    }
+//
+//    public void CreateRoutes()
+//    {
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
+
+    //Vehicle Routing Methods------------------------------------------------------------------------------------------------------------------------
 
     public void StartVRP() throws Exception
     {
@@ -183,50 +301,11 @@ public class Depot extends Agent
             log.info("Demand: " + demand);
             total += distanceRoute;
 
-            world.getTrucks().get(i - 1).setRoute(route);
+            //world.getTrucks().get(i - 1).setRoute(route);
+            routes.put(world.getTrucks().get(i-1).getAID(), route);
         }
 
         log.info("Total distance: " + total);
-    }
-
-    public int getNodeDemand(Node node)
-    {
-        int totalWeight = 0;
-
-        for (Parcel p: parcels)
-        {
-            if (p.getDestination().id == node.id)
-            {
-                totalWeight += p.getWeight();
-            }
-        }
-
-        return totalWeight;
-    }
-
-    public Parcel getParcelByID(int id)
-    {
-        for (Parcel p : parcels)
-        {
-            if (p.getID() == id)
-            {
-                return p;
-            }
-        }
-
-        return null;
-    }
-
-    private BoolVar[] getColumn(BoolVar[][] array, int index)
-    {
-        BoolVar[] column = new BoolVar[array[0].length]; // Here I assume a rectangular 2D array!
-
-        for(int i = 0; i < column.length; i++)
-        {
-            column[i] = array[i][index];
-        }
-
-        return column;
     }
 
     private List<Integer> formatRoute(List<Integer> list)
@@ -243,16 +322,7 @@ public class Depot extends Agent
         return result;
     }
 
-    protected void setup()
-    {
-        System.out.println("Depot: setup");
-        //GetParcels();         //Threw an error
-        CreateBehaviourRequestConstraints();
-        //AssignParcels();  //Matches up trucks with parcels
-        //CreateRoutes();
-        CreateBehaviourAllocateParcels();     //Sends assigned parcels to the truck via messages
-        CreateCyclicBehaviourCheckForRouteRequests();
-    }
+    //Constraint Collection Handling-----------------------------------------------------------------------------------------------------------------
 
     public void CreateBehaviourRequestConstraints()
     {
@@ -337,83 +407,7 @@ public class Depot extends Agent
         addBehaviour(behaviourRequestConstraints);
     }
 
-
-//    private void AssignParcels(){
-//        Model m = new Model("Parcel Assignment for Trucks");
-//        int numParcels = parcels.length;
-//        int numTrucks = trucksAtDepot.size();
-//        BoolVar[][] assignment = m.boolVarMatrix(numParcels, numTrucks);
-//
-//        // Check num of trucks assigned to parcel = 1
-//        for (int i = 0; i < numParcels; i++)
-//        {
-//            m.sum(assignment[i], "=", 1).post();
-//        }
-//
-//        // Check total weight of parcels <= truck weight limit
-//        for (int i = 0; i < numTrucks; i++)
-//        {
-//            m.sum(getColumn(assignment, i), "<=", Math.round(truckCapacity.get(trucksAtDepot.get(i)))).post();
-//        }
-//
-//        Solver s = m.getSolver();
-//        s.solve();
-//
-//        // Print solution
-//        for (int i = 0; i < numParcels; i++)
-//        {
-//            for (int j = 0; j < numTrucks; j++)
-//            {
-//                System.out.print(assignment[i][j].getValue());
-//            }
-//            System.out.println();
-//        }
-//    }
-//
-//    private void AssignParcelsWithWeights(){
-//        Model m = new Model("Parcel Assignment for Trucks");
-//        int numParcels = parcels.length;
-//        int numTrucks = trucksAtDepot.size();
-//        BoolVar[][] assignment = m.boolVarMatrix(numParcels, numTrucks);
-//
-//        // Check num of trucks assigned to parcel = 1
-//        for (int i = 0; i < numParcels; i++)
-//        {
-//            m.sum(assignment[i], "=", 1).post();
-//        }
-//
-//        // Check total weight of parcels <= truck weight limit
-//        for (int i = 0; i < numTrucks; i++)
-//        {
-//            IntVar[] weights = getColumn(assignment, 1);
-//            for (int j = 0; j < numParcels; j++)
-//            {
-//                int weight = weights[j].getValue();
-//                weight *= parcels[j].getWeight();
-//                weights[j] = m.intVar(weight);
-//            }
-//
-//            m.sum(weights, "<=", Math.round(truckCapacity.get(trucksAtDepot.get(i)))).post();
-//        }
-//
-//        Solver s = m.getSolver();
-//        s.solve();
-//
-//        // Print solution
-//        for (int i = 0; i < numParcels; i++)
-//        {
-//            for (int j = 0; j < numTrucks; j++)
-//            {
-//                System.out.print(assignment[i][j].getValue());
-//            }
-//            System.out.println();
-//        }
-//    }
-//
-//    public void CreateRoutes()
-//    {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
+    //Parcel Distribution Handling-------------------------------------------------------------------------------------------------------------------
 
     public void CreateBehaviourAllocateParcels()
     {
@@ -423,7 +417,7 @@ public class Depot extends Agent
             private int truckResponsesReceived = 0;
             private int step = 0;
             private Map<AID, Boolean> responses = new HashMap<AID, Boolean>();
-            private MessageTemplate mt;
+            private MessageTemplate parcelAllocationTemplate;
 
             public void action()
             {
@@ -435,63 +429,46 @@ public class Depot extends Agent
                         // Give to all trucks at depot
                         for (AID truck : trucksAtDepot)
                         {
+                            //Create message
                             ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
-
-                            // Setup inform values
-//                            try
-//                            {
-                                //Serialize as strings
-                                String parcelIDs = "";
-                                parcels[0] = new Parcel(0, 0);
-
-                                for (int i = 0; i < parcels.length; i++)
-                                {
-                                    if (parcels[i] != null)
-                                    {
-                                        if (i > 0)
-                                        {
-                                            parcelIDs += ":";
-                                        }
-
-                                        parcelIDs += parcels[i].getID();
-                                    }
-                                }
-
-                                inform.setContent(parcelIDs);
-
-//                                //Won't accept parcels
-//                                if (truckParcels.get(truck) == null || truckParcels.get(truck).size() == 0)
-//                                {
-//                                    List<Parcel> parcels = new ArrayList<Parcel>();
-//                                    parcels.add(new Parcel(0, 10));
-//                                    truckParcels.put(truck, parcels);
-//                                }
-//
-//                                inform.setContentObject((java.io.Serializable) truckParcels.get(truck));
-//                            }
-//                            catch (IOException e)
-//                            {
-//                                e.printStackTrace();
-//                            }
-
                             inform.setConversationId("Parcel_Allocation");
                             inform.setReplyWith("inform" + System.currentTimeMillis()); // Unique ID
-
                             inform.addReceiver(truck);
                             truckAmount++;
 
-                            // Send inform
+                            //Serialize parcels as string
+                            String parcelIDs = "";
+                            parcels[0] = new Parcel(0, 0);
+
+
+                            //TODO: allocate parcels from parcels according to routing rather than getting a random parcel for testing
+                            for (int i = 0; i < parcels.length; i++)
+                            {
+                                if (parcels[i] != null)
+                                {
+                                    if (i > 0)
+                                    {
+                                        parcelIDs += ":";
+                                    }
+
+                                    parcelIDs += parcels[i].getID();
+                                }
+                            }
+
+                            inform.setContent(parcelIDs);
+
+                            //Send message
                             send(inform);
                         }
 
                         // Setup template to receive responses
-                        mt = MessageTemplate.MatchConversationId("Parcel_Allocation");
+                        parcelAllocationTemplate = MessageTemplate.MatchConversationId("Parcel_Allocation");
 
                         step = 1;
                         break;
                     case 1:
                         System.out.println("Parcel allocation, step 2");
-                        ACLMessage reply = receive(mt);
+                        ACLMessage reply = receive(parcelAllocationTemplate);
 
                         // Wait for replies and store their content
                         if (reply != null)
@@ -524,71 +501,108 @@ public class Depot extends Agent
         addBehaviour(behaviourAllocateParcels);
     }
 
-    private void CreateCyclicBehaviourCheckForRouteRequests()
+    //Route Request Handling-------------------------------------------------------------------------------------------------------------------------
+
+    private void CreateCyclicBehaviourHandleRouteRequests()
     {
-        CyclicBehaviour cyclicBehaviourCheckForRouteRequests = new CyclicBehaviour(this)
+
+        CyclicBehaviour cyclicBehaviourHandleRouteRequests = new CyclicBehaviour(this)
         {
+            private int count = 0;
+
             public void action()
             {
-                System.out.println(getLocalName() + ": checking for route requests");
-                // Match a request for a route
-                MessageTemplate mt = MessageTemplate.MatchConversationId("Route_Request");
-                ACLMessage request = receive(mt);
+                count++;
 
-                if (request != null)
+                if (count > 5000) //Slow down agent execution / reduce the number of times they scream "I'm doing something!!!!" every second
                 {
-                    //TODO: if no route, store request and return to when a route has been established for the requesting truck
-                    System.out.println(getLocalName() + ": found route request");
-                    ACLMessage reply = request.createReply();
-                    reply.setPerformative(ACLMessage.INFORM);
-                    reply.setConversationId(request.getConversationId());
-
-                    // Send the route according to the AID of the truck
-                    try
-                    {
-                        //Serialize as string
-                        String nodeIDs = "";
-                        List<Road> route = new ArrayList<>();
-                        route.add(world.getRandomRoad());
-
-                        for (int i = 0; i < route.size(); i++)
-                        {
-                            if (i > 0)
-                            {
-                                nodeIDs += ":";
-                            }
-
-                            nodeIDs += route.get(i).getDestination().getId();
-                        }
-
-                        reply.setContent(nodeIDs);
-
-//                        //Won't accept roads
-//                        if (routes.get(request.getSender()) == null || routes.get(request.getSender()).size() == 0)
-//                        {
-//                            List<Road> route = new ArrayList<Road>();
-//                            route.add(world.getRandomRoad());
-//                            routes.put(request.getSender(), route);
-//                        }
-//
-//                        reply.setContentObject((java.io.Serializable)routes.get(request.getSender()));
-                    }
-                    catch (Exception e)
-                    {
-                        e.printStackTrace();
-                    }
-
-                    send(reply);
-                }
-                else
-                {
-                    System.out.println(getLocalName() + ": no route requests");
-                    block();
+                    count -= 5000;
+                    HandleQueuedRouteRequests();
+                    HandleNewRouteRequests();
                 }
             }
         };
 
-        addBehaviour(cyclicBehaviourCheckForRouteRequests);
-        System.out.println("Depot: created check for route requests behaviour");
+        addBehaviour(cyclicBehaviourHandleRouteRequests);
+        System.out.println("Depot: created cyclicBehaviourHandleRouteRequests");
+    }
+
+    private void HandleQueuedRouteRequests()
+    {
+        System.out.println(getLocalName() + ": checking queued route requests");
+        List<ACLMessage> completedRequests = new ArrayList<>();
+
+        for (ACLMessage request : pendingRouteRequests)
+        {
+            List<Integer> route = routes.get(request.getSender());
+
+            if (route != null && route.size() > 0)
+            {
+                System.out.println(getLocalName() + ": found route for route request; replying to route request");
+                ReplyToRouteRequest(request, route);
+                completedRequests.add(request);
+            }
+        }
+
+        pendingRouteRequests.removeAll(completedRequests);
+    }
+
+    private void HandleNewRouteRequests()
+    {
+        System.out.println(getLocalName() + ": checking for new route requests");
+
+        // Match a request for a route
+        MessageTemplate routeRequestTemplate = MessageTemplate.MatchConversationId("Route_Request");
+        ACLMessage request;
+
+        do
+        {
+            request = receive(routeRequestTemplate);
+
+            if (request != null)
+            {
+                System.out.println(getLocalName() + ": received new route request");
+                List<Integer> route = routes.get(request.getSender());
+
+                if (route == null || route.size() == 0)
+                {
+                    System.out.println(getLocalName() + ": no route to reply with; queuing route request");
+                    pendingRouteRequests.add(request);
+                }
+                else
+                {
+                    ReplyToRouteRequest(request, route);
+                }
+            }
+            else
+            {
+                System.out.println(getLocalName() + ": received no further route requests");
+                //block();      //If need block, move RouteRequest handling methods back into cyclicBehaviourHandleRouteRequests
+            }
+        } while (request != null);
+    }
+
+    private void ReplyToRouteRequest(ACLMessage request, List<Integer> route)
+    {
+        ACLMessage reply = request.createReply();
+        reply.setPerformative(ACLMessage.INFORM);
+        reply.setConversationId(request.getConversationId());
+
+        // Send the route according to the AID of the truck; serialize as string
+        String nodeIDs = "";
+
+        for (int i = 0; i < route.size(); i++)
+        {
+            if (i > 0)
+            {
+                nodeIDs += ":";
+            }
+
+            nodeIDs += route.get(i);
+        }
+
+        reply.setContent(nodeIDs);
+
+        send(reply);
     }
 }

@@ -59,19 +59,7 @@ public class Truck extends Agent
         }
     }
 
-    public void setRoute(List<Integer> value)
-    {
-        List<Node> route = new ArrayList<Node>();
-
-        for (Integer i : value)
-        {
-            route.add(world.getGraph().getNodeWithID(i));
-        }
-
-        this.route = route;
-    }
-
-    //Constructor------------------------------------------------------------------------------------------------------------------------------------
+    //Setup Methods----------------------------------------------------------------------------------------------------------------------------------
 
     public Truck(World world, Node startNode, float weightLimit)
     {
@@ -81,8 +69,6 @@ public class Truck extends Agent
         this.weightLimit = weightLimit;
     }
 
-    //Methods----------------------------------------------------------------------------------------------------------------------------------------
-
     protected void setup()
     {
         System.out.println(getLocalName() + ": setup");
@@ -91,11 +77,13 @@ public class Truck extends Agent
         CreateCyclicBehaviourUpdate();
     }
 
+    //Methods----------------------------------------------------------------------------------------------------------------------------------------
+
     private void CreateCyclicBehaviourUpdate()
     {
         CyclicBehaviour cyclicBehaviourUpdate = new CyclicBehaviour(this)
         {
-            int count = 0;
+            private int count = 0;
 
             public void action()
             {
@@ -226,91 +214,6 @@ public class Truck extends Agent
             //Send reply
             send(reply);
         }
-    }
-
-    private void CreateBehaviourRequestRoute()
-    {
-        Behaviour behaviourRequestRoute = new Behaviour(this)
-        {
-            private int step;
-            private MessageTemplate mt;
-
-            public void action()
-            {
-                switch (step) {
-                    case 0:
-                        ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
-
-                        // Setup request values
-                        request.addReceiver(depotAID);
-                        request.setContent("Route");
-                        request.setConversationId("Route_Request");
-                        request.setReplyWith("request" + System.currentTimeMillis()); // Unique ID
-
-                        // Send request
-                        send(request);
-
-                        // Setup template to receive responses
-                        mt = MessageTemplate.and(MessageTemplate.MatchConversationId("Route_Request"),
-                                MessageTemplate.MatchInReplyTo(request.getReplyWith()));
-
-                        step++;
-                        break;
-                    case 1:
-                        // Wait for replies and store their content
-                        ACLMessage reply = receive(mt);
-                        boolean received = false;
-
-                        if (reply != null)
-                        {
-                            try
-                            {
-                                //Store route
-                                route = (List<Node>) reply.getContentObject();
-                                received = true;
-
-                                //Retrieve first destination from route
-                                currentDestination = route.get(0);
-                                route.remove(0);
-                            }
-                            catch (UnreadableException e)
-                            {
-                                e.printStackTrace();
-                            }
-
-                            //Create confirmation message
-                            ACLMessage confirmation = reply.createReply();
-
-                            //Set confirmation "metadata"
-                            confirmation.setPerformative(ACLMessage.INFORM);
-                            confirmation.setInReplyTo(reply.getInReplyTo());
-                            confirmation.setConversationId(reply.getConversationId());
-
-                            //Set confirmation content
-                            String outcome = received ? "Yes" : "No";
-                            confirmation.setContent(outcome);
-
-                            //Send confirmation
-                            send(confirmation);
-
-                            step++;
-                        }
-                        else
-                        {
-                            block();
-                        }
-
-                        break;
-                }
-            }
-
-            public boolean done()
-            {
-                return step == 2;
-            }
-        };
-
-        addBehaviour(behaviourRequestRoute);
     }
 
     private void Move()

@@ -56,7 +56,7 @@ public class VrpFitnessFunc extends FitnessFunction {
 
         double totalCoveredBySolution = 0.0;
         for (int i = 0; i < positions.size(); i++) {
-            final Node node = depot.GetNodesWithParcelsAssigned().get(positions.get(i));//graph.getNodeWithID(pos);
+            final Node node = depot.getNodesWithParcelsAssigned().get(positions.get(i));//graph.getNodeWithID(pos);
             totalCoveredBySolution += depot.getNodeDemand(node);
         }
         //if (totalCoveredBySolution == 0) System.out.println("truck has no parcels");
@@ -87,7 +87,7 @@ public class VrpFitnessFunc extends FitnessFunction {
         Node lastVisited = store;
 
         for (int pos : positions) {
-            final Node node = depot.GetNodesWithParcelsAssigned().get(pos);
+            final Node node = depot.getNodesWithParcelsAssigned().get(pos);
             totalDistance += Vector2.distance(lastVisited.position, node.position);
             lastVisited = node;
         }
@@ -112,7 +112,7 @@ public class VrpFitnessFunc extends FitnessFunction {
     public static List<Integer> getPositions(final int vehicleNumber, final IChromosome chromosome, final NodeGraph graph, final boolean order) {
         final List<Integer> route = new ArrayList<>();
         final List<Double> positions = new ArrayList<>();
-        final int graphDimension = depot.GetNodesWithParcelsAssigned().size();
+        final int graphDimension = depot.getNodesWithParcelsAssigned().size();
         for (int i = 0; i < graphDimension; i++) {
             int chromosomeValue = (Integer) chromosome.getGene(i).getAllele();
             if (chromosomeValue == vehicleNumber) {
