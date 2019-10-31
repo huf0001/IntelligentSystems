@@ -30,4 +30,8 @@ public class Node
     {
         this.parcels.addAll(parcels);
     }
+
+    public double GetDistance(Node node) {
+        return Vector2.distance(position, node.position);
+    }
 }
