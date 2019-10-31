@@ -40,12 +40,6 @@ public class World extends JPanel
         return nodes.get((int)RandomFloatBetween(0, nodes.size() - 1));
     }
 
-    public Road getRandomRoad()
-    {
-        ArrayList<Node> nodes = new ArrayList<Node>(graph.adjNodes.keySet());
-        return new Road(nodes.get(0), nodes.get((int)RandomFloatBetween(0, nodes.size() - 1)));
-    }
-
     //Setup Methods----------------------------------------------------------------------------------------------------------------------------------
 
     public World() throws ControllerException
