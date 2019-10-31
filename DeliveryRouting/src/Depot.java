@@ -531,6 +531,7 @@ public class Depot extends Agent
     {
         System.out.println(getLocalName() + ": checking queued route requests");
         List<ACLMessage> completedRequests = new ArrayList<>();
+        List<List<Integer>> dispatchedRoutes = new ArrayList<>();
 
         for (ACLMessage request : pendingRouteRequests)
         {
@@ -541,10 +542,16 @@ public class Depot extends Agent
                 System.out.println(getLocalName() + ": found route for route request; replying to route request");
                 ReplyToRouteRequest(request, route);
                 completedRequests.add(request);
+                dispatchedRoutes.add(route);
             }
         }
 
         pendingRouteRequests.removeAll(completedRequests);
+
+        for (List<Integer> route : dispatchedRoutes)
+        {
+            route.clear();
+        }
     }
 
     private void HandleNewRouteRequests()
