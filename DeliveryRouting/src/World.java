@@ -14,7 +14,6 @@ public class World extends JPanel
 {
     //Private Fields---------------------------------------------------------------------------------------------------------------------------------
 
-    private static World instance = null;
     private Random random = new Random();
     private JFrame frame;
     private NodeGraph graph;
