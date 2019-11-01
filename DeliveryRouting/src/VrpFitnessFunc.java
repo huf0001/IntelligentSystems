@@ -7,10 +7,9 @@ import java.util.List;
 
 public class VrpFitnessFunc extends FitnessFunction {
 
-    private static final int PENALIZE_INCOMPLETE_DELIVERY = 500;
-    private static final int PENALIZE_INCOMPLETE_TRUCK = 5;
-    private static final int PENALIZE_DISTANCE = 40;
-    private static final int PENALIZE_EMPTY_TRUCK = 350;
+    private static final int PENALIZE_OVERLOADED_TRUCK = 15;
+    private static final int PENALIZE_DISTANCE = 4;
+    private static final int PENALIZE_EMPTY_TRUCK = 5;
     private final World world;
     private static Depot depot = null;
 
@@ -72,7 +71,7 @@ public class VrpFitnessFunc extends FitnessFunction {
             return (vehicleCapacity - totalCoveredBySolution) * PENALIZE_EMPTY_TRUCK;
         }
         if (totalCoveredBySolution > vehicleCapacity) {//can't complete delivery
-            return Math.pow(totalCoveredBySolution - vehicleCapacity, PENALIZE_INCOMPLETE_DELIVERY);
+            return Math.pow(totalCoveredBySolution - vehicleCapacity, PENALIZE_OVERLOADED_TRUCK);
         }
         return 0;
         //return (vehicleCapacity - totalCoveredBySolution) * PENALIZE_INCOMPLETE_TRUCK;//unused capacity
