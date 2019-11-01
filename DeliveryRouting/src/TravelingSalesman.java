@@ -1,5 +1,6 @@
 //Code taken and adapted from https://www.baeldung.com/java-simulated-annealing-for-traveling-salesman
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -21,12 +22,21 @@ public class TravelingSalesman {
     public void SetRoute(List<Node> route){
         _route = route;
     }
+    public void SetRoute(List<Integer> routeInts, World world){
+        List<Node> route = new ArrayList<>();
+        for (Integer id: routeInts)  {
+            route.add(world.getNodeByID(id));
+        }
+        _route = route;
+    }
 
-    public List<Node> SimulateAnnealing(double startingTemperature, int numberOfIterations, double coolingRate) {
+    public List<Integer> SimulateAnnealing(double startingTemperature, int numberOfIterations, double coolingRate) {
         double t = startingTemperature;
         double bestDistance = GetDistance();
+        _bestRoute = _route;
+        int i = 0;
 
-        for (int i = 0; i < numberOfIterations; i++) {
+        for (i = 0; i < numberOfIterations; i++) {
             if (t > 0.1) {
                 SwapNodes();
                 double currentDistance = GetDistance();
@@ -36,20 +46,27 @@ public class TravelingSalesman {
                 } else if (Math.exp((bestDistance - currentDistance) / t) < Math.random()) {
                     RevertSwap();
                 }
-                t *= coolingRate;
+                t *= 1 - coolingRate;
             } else {
-                continue;
+                break;
             }
         }
 
-        return _bestRoute;
+        System.out.println("Iterations " + i);
+        System.out.println("Cooling " + coolingRate);
+        System.out.println("Temp " + t);
+
+        List<Integer> output = new ArrayList<>();
+        for (Node node : _bestRoute){
+            output.add(node.id);
+        }
+        return output;
     }
 
     private void SwapNodes() {
         Random r = new Random();
-        r.nextInt(_route.size() + 1);
-        int a = r.nextInt(_route.size() + 1);
-        int b = r.nextInt(_route.size() + 1);
+        int a = r.nextInt(_route.size());
+        int b = r.nextInt(_route.size());
         _previousRoute = _route;
         Node x = _route.get(a);
         Node y = _route.get(b);

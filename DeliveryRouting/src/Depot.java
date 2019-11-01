@@ -305,6 +305,12 @@ public class Depot extends Agent
         {
             List<Integer> route = VrpFitnessFunc.getPositions(i, bestSolution, world.getGraph(), true);
             route = formatRoute(route);
+
+            TravelingSalesman travelingSalesman = new TravelingSalesman();
+            travelingSalesman.SetRoute(route, world);
+            route = travelingSalesman.SimulateAnnealing(10000, 10000, 0.003);
+            System.out.println(route);
+
             final double distanceRoute = VrpFitnessFunc.computeTotalDistance(i - 1, bestSolution, world.getGraph());
             final double demand = VrpFitnessFunc.computeTotalCoveredDemand(i, bestSolution, world.getGraph());
             log.info("Vehicle #" + i + " :" + route);
@@ -370,7 +376,7 @@ public class Depot extends Agent
                 switch (step)
                 {
                     case 0:
-                        System.out.println(getLocalName() + ": Requesting Constraints");
+                        //System.out.println(getLocalName() + ": Requesting Constraints");
                         ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
 
                         // Ask all trucks at depot
@@ -394,7 +400,7 @@ public class Depot extends Agent
                         step = 1;
                         break;
                     case 1:
-                        System.out.println(getLocalName() + ": Checking for Constraint Replies");
+                        //System.out.println(getLocalName() + ": Checking for Constraint Replies");
                         ACLMessage reply = receive(mt);
 
                         // Wait for replies and store their content
@@ -412,18 +418,18 @@ public class Depot extends Agent
                                 }
                             }
 
-                            System.out.println(getLocalName() + ": received Constraint Reply from " + reply.getSender().getLocalName());
+                            //System.out.println(getLocalName() + ": received Constraint Reply from " + reply.getSender().getLocalName());
                             truckResponsesReceived++;
                         }
                         else
                         {
-                            System.out.println(getLocalName() + ": no Constraint Replies");
+                            //System.out.println(getLocalName() + ": no Constraint Replies");
                             block();
                         }
 
                         if (truckResponsesReceived >= truckAmount)
                         {
-                            System.out.println(getLocalName() + ": received all Constraint Replies");
+                            //System.out.println(getLocalName() + ": received all Constraint Replies");
                             step = 2;
                         }
 
@@ -456,7 +462,7 @@ public class Depot extends Agent
                 switch (step)
                 {
                     case 0:
-                        System.out.println("Parcel allocation, step 1");
+                        //System.out.println("Parcel allocation, step 1");
 
                         // Give to all trucks at depot
                         for (AID truck : trucksAtDepot)
@@ -497,7 +503,7 @@ public class Depot extends Agent
                         step = 1;
                         break;
                     case 1:
-                        System.out.println("Parcel allocation, step 2");
+                        //System.out.println("Parcel allocation, step 2");
                         ACLMessage reply = receive(parcelAllocationTemplate);
 
                         // Wait for replies and store their content
@@ -554,12 +560,12 @@ public class Depot extends Agent
         };
 
         addBehaviour(cyclicBehaviourHandleRouteRequests);
-        System.out.println("Depot: created cyclicBehaviourHandleRouteRequests");
+        //System.out.println("Depot: created cyclicBehaviourHandleRouteRequests");
     }
 
     private void HandleQueuedRouteRequests()
     {
-        System.out.println(getLocalName() + ": checking queued route requests");
+        //System.out.println(getLocalName() + ": checking queued route requests");
         List<ACLMessage> completedRequests = new ArrayList<>();
         List<List<Integer>> dispatchedRoutes = new ArrayList<>();
 
@@ -569,7 +575,7 @@ public class Depot extends Agent
 
             if (route != null && route.size() > 0)
             {
-                System.out.println(getLocalName() + ": found route for route request; replying to route request");
+                //System.out.println(getLocalName() + ": found route for route request; replying to route request");
                 ReplyToRouteRequest(request, route);
                 completedRequests.add(request);
                 dispatchedRoutes.add(route);
@@ -586,7 +592,7 @@ public class Depot extends Agent
 
     private void HandleNewRouteRequests()
     {
-        System.out.println(getLocalName() + ": checking for new route requests");
+        //System.out.println(getLocalName() + ": checking for new route requests");
 
         // Match a request for a route
         MessageTemplate routeRequestTemplate = MessageTemplate.MatchConversationId("Route_Request");
@@ -598,12 +604,12 @@ public class Depot extends Agent
 
             if (request != null)
             {
-                System.out.println(getLocalName() + ": received new route request");
+                //System.out.println(getLocalName() + ": received new route request");
                 List<Integer> route = routes.get(request.getSender());
 
                 if (route == null || route.size() == 0)
                 {
-                    System.out.println(getLocalName() + ": no route to reply with; queuing route request");
+                    //System.out.println(getLocalName() + ": no route to reply with; queuing route request");
                     pendingRouteRequests.add(request);
                 }
                 else
@@ -613,7 +619,7 @@ public class Depot extends Agent
             }
             else
             {
-                System.out.println(getLocalName() + ": received no further route requests");
+                //System.out.println(getLocalName() + ": received no further route requests");
                 //block();      //If need block, move RouteRequest handling methods back into cyclicBehaviourHandleRouteRequests
             }
         } while (request != null);

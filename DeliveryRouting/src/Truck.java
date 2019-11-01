@@ -99,25 +99,25 @@ public class Truck extends Agent
                 if (count > 5000) //Slow down agent execution / reduce the number of times they scream "I'm doing something!!!!" every second
                 {
                     count -= 5000;
-                    System.out.println(getLocalName() + ".Update().CheckForConstraintRequest()");
+                    //System.out.println(getLocalName() + ".Update().CheckForConstraintRequest()");
                     CheckForConstraintRequest();
 
                     switch (step)
                     {
                         case 0:
-                            System.out.println(getLocalName() + ".Update().CheckForParcelAllocation()");
+                            //System.out.println(getLocalName() + ".Update().CheckForParcelAllocation()");
                             CheckForParcelAllocation();
                             break;
                         case 1:
-                            System.out.println(getLocalName() + ".Update().SendRouteRequest()");
+                            //System.out.println(getLocalName() + ".Update().SendRouteRequest()");
                             SendRouteRequest();
                             break;
                         case 2:
-                            System.out.println(getLocalName() + ".Update().ReceiveRouteReply()");
+                            //System.out.println(getLocalName() + ".Update().ReceiveRouteReply()");
                             ReceiveRouteReply();
                             break;
                         case 3:
-                            System.out.println(getLocalName() + ".Update().Move()");
+                            //System.out.println(getLocalName() + ".Update().Move()");
                             Move();
                             break;
                     }
@@ -159,7 +159,7 @@ public class Truck extends Agent
 
         //Send reply
         send(reply);
-        System.out.println(getLocalName() + ": received Constraint Request from " + request.getSender().getLocalName() + ", replied with constraints");
+        //System.out.println(getLocalName() + ": received Constraint Request from " + request.getSender().getLocalName() + ", replied with constraints");
     }
 
     private void CheckForParcelAllocation()
@@ -195,7 +195,7 @@ public class Truck extends Agent
 
             parcels.addAll(newParcels);
             received = true;
-            System.out.println(getLocalName() + ": received " + newParcels.size() + " parcels. Now have " + parcels.size() + " parcels");
+            //System.out.println(getLocalName() + ": received " + newParcels.size() + " parcels. Now have " + parcels.size() + " parcels");
 
             //Create reply
             ACLMessage reply = msg.createReply();
@@ -224,7 +224,7 @@ public class Truck extends Agent
         request.setConversationId("Route_Request");
         request.setReplyWith("request" + System.currentTimeMillis()); // Unique ID
 
-        System.out.println(getLocalName() + ": sending route request to agent " + depotAID.getLocalName());
+        //System.out.println(getLocalName() + ": sending route request to agent " + depotAID.getLocalName());
 
         // Send request
         send(request);
@@ -255,7 +255,7 @@ public class Truck extends Agent
                 }
             }
 
-            System.out.println(getLocalName() + ": received route");
+            //System.out.println(getLocalName() + ": received route");
             received = true;
 
             //Retrieve first destination from route
@@ -301,7 +301,7 @@ public class Truck extends Agent
             if (route.size() == 0)
             {
                 step++;
-                System.out.println(getLocalName() + ": completed route");
+                //System.out.println(getLocalName() + ": completed route");
                 //System.out.println(getLocalName() + ": requesting route; setting requestingRoute to true");
             }
             else
@@ -309,16 +309,16 @@ public class Truck extends Agent
                 visitedNodes.add(currentDestination);
                 currentDestination = route.get(0);
                 route.remove(0);
-                System.out.println(getLocalName() + ": New destination: Node " + currentDestination.id);
+                //System.out.println(getLocalName() + ": New destination: Node " + currentDestination.id);
             }
         }
         else if (depotAID != null)
         {
-            System.out.println(getLocalName() + ".Move(): waiting for route request to be resolved");
+            //System.out.println(getLocalName() + ".Move(): waiting for route request to be resolved");
         }
         else
         {
-            System.out.println(getLocalName() + ".Move(): waiting for depotAID");
+            //System.out.println(getLocalName() + ".Move(): waiting for depotAID");
         }
     }
 
@@ -336,7 +336,7 @@ public class Truck extends Agent
 
         parcels.removeAll(delivery);
         currentDestination.DeliverParcels(delivery);
-        System.out.println(getLocalName() + ": " + delivery.size() + " parcels delivered to Node " + currentDestination.id);
+        //System.out.println(getLocalName() + ": " + delivery.size() + " parcels delivered to Node " + currentDestination.id);
     }
 
     private boolean isNumeric (String s)
