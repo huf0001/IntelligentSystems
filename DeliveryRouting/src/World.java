@@ -44,7 +44,7 @@ public class World extends JPanel
 
     //Setup Methods----------------------------------------------------------------------------------------------------------------------------------
 
-    public World() throws ControllerException
+    public World(String[] args) throws ControllerException
     {
         List<AID> truckAIDs = new ArrayList<>();
         float minWeightLimit = 15;
@@ -88,8 +88,15 @@ public class World extends JPanel
 
         try
         {
-            depot.StartVRP();
-            //depot.SimpleWaypoints();
+            if (args.length > 0){
+                if (args[0].toLowerCase().equals("genetic")){
+                    depot.StartVRP();
+                } else if (args[0].toLowerCase().equals("simple")){
+                    depot.SimpleWaypoints();
+                }
+            } else{
+                depot.StartVRP();
+            }
         }
         catch (Exception e)
         {

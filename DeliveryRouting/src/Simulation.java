@@ -130,7 +130,7 @@ public class Simulation
 
         try
         {
-            world = new World();
+            world = new World(args);
         }
         catch (Exception e)
         {

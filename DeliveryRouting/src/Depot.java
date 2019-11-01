@@ -156,94 +156,6 @@ public class Depot extends Agent
         CreateCyclicBehaviourHandleRouteRequests();
     }
 
-    //    private BoolVar[] getColumn(BoolVar[][] array, int index)
-//    {
-//        BoolVar[] column = new BoolVar[array[0].length]; // Here I assume a rectangular 2D array!
-//
-//        for(int i = 0; i < column.length; i++)
-//        {
-//            column[i] = array[i][index];
-//        }
-//
-//        return column;
-//    }
-//    private void AssignParcels(){
-//        Model m = new Model("Parcel Assignment for Trucks");
-//        int numParcels = parcels.length;
-//        int numTrucks = trucksAtDepot.size();
-//        BoolVar[][] assignment = m.boolVarMatrix(numParcels, numTrucks);
-//
-//        // Check num of trucks assigned to parcel = 1
-//        for (int i = 0; i < numParcels; i++)
-//        {
-//            m.sum(assignment[i], "=", 1).post();
-//        }
-//
-//        // Check total weight of parcels <= truck weight limit
-//        for (int i = 0; i < numTrucks; i++)
-//        {
-//            m.sum(getColumn(assignment, i), "<=", Math.round(truckCapacity.get(trucksAtDepot.get(i)))).post();
-//        }
-//
-//        Solver s = m.getSolver();
-//        s.solve();
-//
-//        // Print solution
-//        for (int i = 0; i < numParcels; i++)
-//        {
-//            for (int j = 0; j < numTrucks; j++)
-//            {
-//                System.out.print(assignment[i][j].getValue());
-//            }
-//            System.out.println();
-//        }
-//    }
-//
-//    private void AssignParcelsWithWeights(){
-//        Model m = new Model("Parcel Assignment for Trucks");
-//        int numParcels = parcels.length;
-//        int numTrucks = trucksAtDepot.size();
-//        BoolVar[][] assignment = m.boolVarMatrix(numParcels, numTrucks);
-//
-//        // Check num of trucks assigned to parcel = 1
-//        for (int i = 0; i < numParcels; i++)
-//        {
-//            m.sum(assignment[i], "=", 1).post();
-//        }
-//
-//        // Check total weight of parcels <= truck weight limit
-//        for (int i = 0; i < numTrucks; i++)
-//        {
-//            IntVar[] weights = getColumn(assignment, 1);
-//            for (int j = 0; j < numParcels; j++)
-//            {
-//                int weight = weights[j].getValue();
-//                weight *= parcels[j].getWeight();
-//                weights[j] = m.intVar(weight);
-//            }
-//
-//            m.sum(weights, "<=", Math.round(truckCapacity.get(trucksAtDepot.get(i)))).post();
-//        }
-//
-//        Solver s = m.getSolver();
-//        s.solve();
-//
-//        // Print solution
-//        for (int i = 0; i < numParcels; i++)
-//        {
-//            for (int j = 0; j < numTrucks; j++)
-//            {
-//                System.out.print(assignment[i][j].getValue());
-//            }
-//            System.out.println();
-//        }
-//    }
-//
-//    public void CreateRoutes()
-//    {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
-
     //Vehicle Routing Methods------------------------------------------------------------------------------------------------------------------------
 
     public void StartVRP() throws Exception
@@ -312,11 +224,6 @@ public class Depot extends Agent
             List<Integer> route = VrpFitnessFunc.getPositions(i, bestSolution, world.getGraph(), true);
             route = formatRoute(route);
 
-            TravelingSalesman travelingSalesman = new TravelingSalesman();
-            travelingSalesman.SetRoute(route, world);
-            route = travelingSalesman.SimulateAnnealing(10000, 10000, 0.003);
-            System.out.println(route);
-
             final double distanceRoute = VrpFitnessFunc.computeTotalDistance(i - 1, bestSolution, world.getGraph());
             final double demand = VrpFitnessFunc.computeTotalCoveredDemand(i, bestSolution, world.getGraph());
             log.info("Vehicle #" + i + " :" + route);
@@ -366,6 +273,8 @@ public class Depot extends Agent
             salesman.SetRoute(nodeList);
             List<Integer> route = salesman.SimulateAnnealing(1000, 10000, 0.003);
 
+            route.add(0);
+
             AID truckAID = world.getTrucks().get(count).getAID();
             routes.put(truckAID, route);
             List<Parcel> allocatedParcels = new ArrayList<Parcel>();
@@ -398,6 +307,8 @@ public class Depot extends Agent
             result.set(i, nodesWithParcelsAssigned.get(result.get(i)).id);
             //System.out.println(result.get(i));
         }
+
+        result.add(0);
 
         return result;
     }
