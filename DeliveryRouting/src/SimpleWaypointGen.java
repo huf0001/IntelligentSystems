@@ -76,7 +76,8 @@ public class SimpleWaypointGen {
 
         //Create a route by getting the next closest node
         for (int i = 0; i < _nodesPerRoute; i++) {
-            _unRouted.sort(Comparator.comparing(currNode::GetDistance));
+            Node finalCurrNode = currNode;
+            _unRouted.sort(Comparator.comparing((n)-> finalCurrNode.GetDistance(n)));
             route.add(_unRouted.get(0));
             currNode = _unRouted.get(0);
             _unRouted.remove(0);
@@ -84,11 +85,14 @@ public class SimpleWaypointGen {
 
         //If there is an uneven amount of nodes per route, add an extra node.
         if (_extraNodes > 0) {
-            _unRouted.sort(Comparator.comparing((n)->_start.GetDistance(n)));
+            Node finalCurrNode1 = currNode;
+            _unRouted.sort(Comparator.comparing((n)-> finalCurrNode1.GetDistance(n)));
             route.add(_unRouted.get(0));
             _unRouted.remove(0);
             _extraNodes--;
         }
+
+        route.add(0, _start);
 
         return route;
     }

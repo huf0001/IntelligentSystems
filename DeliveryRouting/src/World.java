@@ -89,6 +89,7 @@ public class World extends JPanel
         try
         {
             depot.StartVRP();
+            //depot.SimpleWaypoints();
         }
         catch (Exception e)
         {

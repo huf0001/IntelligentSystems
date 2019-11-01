@@ -107,11 +107,17 @@ public class Depot extends Agent
         this.world = world;
         GetParcels();
 
+        List<Integer> assignedIDs = new ArrayList<>();
         for (Parcel p : allParcels)
         {
             Node randNode = world.getRandomNode();
+            while (assignedIDs.contains(randNode.id)){
+                randNode = world.getRandomNode();
+            }
+
             p.setDestination(randNode);
             nodesWithParcelsAssigned.add(randNode);
+            assignedIDs.add(randNode.id);
             System.out.println(randNode.id);
         }
 
@@ -344,6 +350,42 @@ public class Depot extends Agent
         log.info("All parcels: " + allParcels.size());
         log.info("Allocated parcels: " + (allParcels.size() - unallocatedParcels.size()));
         log.info("Unallocated parcels: " + unallocatedParcels.size());
+    }
+
+    public void SimpleWaypoints() {
+        List<Node> nodes = new ArrayList<>();
+        //nodes.addAll(world.getGraph().adjNodes.keySet());
+        nodes.addAll(nodesWithParcelsAssigned);
+        nodes.add(0, world.getNodeByID(0));
+        SimpleWaypointGen gen = new SimpleWaypointGen(nodes, numTrucks);
+        List<List<Node>> genRoutes = gen.GenerateRoutes();
+
+        int count = 0;
+        for (List<Node> nodeList : genRoutes){
+            TravelingSalesman salesman = new TravelingSalesman();
+            salesman.SetRoute(nodeList);
+            List<Integer> route = salesman.SimulateAnnealing(1000, 10000, 0.003);
+
+            AID truckAID = world.getTrucks().get(count).getAID();
+            routes.put(truckAID, route);
+            List<Parcel> allocatedParcels = new ArrayList<Parcel>();
+
+            count++;
+
+            for (Parcel parcel : unallocatedParcels)
+            {
+                for (Integer nodeID : route)
+                {
+                    if (parcel.getDestination().getId() == nodeID)
+                    {
+                        allocatedParcels.add(parcel);
+                        break;
+                    }
+                }
+            }
+            unallocatedParcels.removeAll(allocatedParcels);
+            truckParcels.get(truckAID).addAll(allocatedParcels);
+        }
     }
 
     private List<Integer> formatRoute(List<Integer> list)

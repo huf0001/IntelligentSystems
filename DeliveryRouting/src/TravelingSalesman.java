@@ -43,6 +43,7 @@ public class TravelingSalesman {
                 if (currentDistance < bestDistance) {
                     bestDistance = currentDistance;
                     _bestRoute = _route;
+                    System.out.println("Better route found");
                 } else if (Math.exp((bestDistance - currentDistance) / t) < Math.random()) {
                     RevertSwap();
                 }
@@ -60,18 +61,25 @@ public class TravelingSalesman {
         for (Node node : _bestRoute){
             output.add(node.id);
         }
+        System.out.println("Route " + output + "\n");
         return output;
     }
 
     private void SwapNodes() {
         Random r = new Random();
-        int a = r.nextInt(_route.size());
-        int b = r.nextInt(_route.size());
+        int a = GetIndex();
+        int b = GetIndex();
         _previousRoute = _route;
         Node x = _route.get(a);
         Node y = _route.get(b);
         _route.set(a, y);
         _route.set(b, x);
+    }
+
+    private int GetIndex() {
+        Random r = new Random();
+        int result = r.nextInt(_route.size() - 1) + 1;
+        return result;
     }
 
     private void RevertSwap() {
