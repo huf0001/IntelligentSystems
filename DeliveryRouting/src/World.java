@@ -50,6 +50,15 @@ public class World extends JPanel
         float minWeightLimit = 15;
         float maxWeightLimit = 30;
         int numTrucks = 10;
+        try {
+            if (args.length > 1) {
+                numTrucks = Integer.parseInt(args[1]);
+            }
+            else {
+                numTrucks = 10;
+            }
+        }
+        catch (Exception e){}
         List<AgentController> agentControllers = new ArrayList<>();
 
         graph = createGraph();
